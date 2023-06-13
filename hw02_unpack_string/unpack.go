@@ -12,40 +12,62 @@ func toDigit(r rune) int {
 	return int(r - '0')
 }
 
-func isEmpty(r rune) bool {
-	return r == 0
-}
-
 func Unpack(str string) (string, error) {
+	runes := []rune(str)
+	length := len(runes)
 	builder := strings.Builder{}
-	var curLetter rune
+	i := 0
 
-	for _, char := range str {
-		if unicode.IsDigit(char) {
-			// check, if digit goes after letter
-			if isEmpty(curLetter) {
+	var curChar rune
+	var isEscaped bool
+
+	for i < length {
+		char := runes[i]
+
+		if isEscaped { // case after escape char
+			if char == '\\' {
+				curChar = '\\'
+			} else if unicode.IsLetter(char) { // letter after escape forbidden
+				return "", ErrInvalidString
+			} else if unicode.IsDigit(char) {
+				curChar = char
+			} else {
 				return "", ErrInvalidString
 			}
 
-			// write to builder
-			digit := toDigit(char)
-			for i := 0; i < digit; i++ {
-				builder.WriteRune(curLetter)
-			}
-			curLetter = 0
-		} else {
-			// if letter without digit
-			if !isEmpty(curLetter) {
-				builder.WriteRune(curLetter)
-			}
+			isEscaped = false
+		} else { // normal case
+			if char == '\\' {
+				if curChar != 0 { // write prev char
+					builder.WriteRune(curChar)
+				}
 
-			curLetter = char
+				isEscaped = true
+			} else if unicode.IsLetter(char) {
+				if curChar != 0 { // write prev char
+					builder.WriteRune(curChar)
+				}
+
+				curChar = char
+			} else if unicode.IsDigit(char) {
+				if curChar == 0 { // only letter can be repeated
+					return "", ErrInvalidString
+				}
+
+				for j := 0; j < toDigit(char); j++ {
+					builder.WriteRune(curChar)
+				}
+				curChar = 0
+			} else {
+				return "", ErrInvalidString
+			}
 		}
+
+		i += 1
 	}
 
-	// write last letter to builder
-	if !isEmpty(curLetter) {
-		builder.WriteRune(curLetter)
+	if curChar != 0 { // write last char if exists
+		builder.WriteRune(curChar)
 	}
 
 	return builder.String(), nil
