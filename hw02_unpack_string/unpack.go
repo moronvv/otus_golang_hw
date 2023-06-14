@@ -25,31 +25,33 @@ func Unpack(str string) (string, error) {
 		char := runes[i]
 
 		if isEscaped { // case after escape char
-			if char == '\\' {
+			switch {
+			case char == '\\':
 				curChar = '\\'
-			} else if unicode.IsLetter(char) { // letter after escape forbidden
+			case unicode.IsLetter(char): // letter after escape forbidden
 				return "", ErrInvalidString
-			} else if unicode.IsDigit(char) {
+			case unicode.IsDigit(char):
 				curChar = char
-			} else {
+			default:
 				return "", ErrInvalidString
 			}
 
 			isEscaped = false
 		} else { // normal case
-			if char == '\\' {
+			switch {
+			case char == '\\':
 				if curChar != 0 { // write prev char
 					builder.WriteRune(curChar)
 				}
 
 				isEscaped = true
-			} else if unicode.IsLetter(char) {
+			case unicode.IsLetter(char):
 				if curChar != 0 { // write prev char
 					builder.WriteRune(curChar)
 				}
 
 				curChar = char
-			} else if unicode.IsDigit(char) {
+			case unicode.IsDigit(char):
 				if curChar == 0 { // only letter can be repeated
 					return "", ErrInvalidString
 				}
@@ -58,12 +60,12 @@ func Unpack(str string) (string, error) {
 					builder.WriteRune(curChar)
 				}
 				curChar = 0
-			} else {
+			default:
 				return "", ErrInvalidString
 			}
 		}
 
-		i += 1
+		i++
 	}
 
 	if curChar != 0 { // write last char if exists
