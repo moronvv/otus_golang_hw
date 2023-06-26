@@ -1,6 +1,7 @@
 package hw03frequencyanalysis
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -10,9 +11,29 @@ type wordCnt struct {
 	Cnt  int
 }
 
+var re = regexp.MustCompile(`([а-яА-я-]+)`)
+
+// Clear words from non-letter symbols.
+func sanitize(word string) string {
+	switch word {
+	case "", "-":
+		return ""
+	default:
+		word = strings.ToLower(word)
+
+		matches := re.FindStringSubmatch(word)
+		if len(matches) > 1 {
+			return matches[1]
+		}
+
+		return ""
+	}
+}
+
 func countFrequency(words []string) map[string]int {
 	freq := map[string]int{}
 	for _, word := range words {
+		word = sanitize(word)
 		if word != "" {
 			freq[word]++
 		}
