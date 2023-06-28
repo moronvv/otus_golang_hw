@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-type wordCnt struct {
-	Word string
-	Cnt  int
-}
-
 var re = regexp.MustCompile(`([а-яА-я-]+)`)
 
 // Clear words from non-letter symbols.
@@ -43,25 +38,22 @@ func countFrequency(words []string) map[string]int {
 }
 
 func sortByFrequency(wordsFreq map[string]int) []string {
-	freq := []wordCnt{}
-	for word, cnt := range wordsFreq {
-		freq = append(freq, wordCnt{word, cnt})
+	words := []string{}
+	for word := range wordsFreq {
+		words = append(words, word)
 	}
 
-	sort.Slice(freq, func(i, j int) bool {
-		if freq[i].Cnt == freq[j].Cnt {
-			return freq[i].Word < freq[j].Word
-		}
+	sort.Slice(words, func(i, j int) bool {
+		iFreq, jFreq := wordsFreq[words[i]], wordsFreq[words[j]]
 
-		return freq[i].Cnt > freq[j].Cnt
+		// lexigraphic sort for words with same frequency
+		if iFreq == jFreq {
+			return words[i] < words[j]
+		}
+		return iFreq > jFreq
 	})
 
-	sortedWords := []string{}
-	for _, wc := range freq {
-		sortedWords = append(sortedWords, wc.Word)
-	}
-
-	return sortedWords
+	return words
 }
 
 func Top10(s string) []string {
