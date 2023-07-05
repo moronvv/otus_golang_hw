@@ -1,6 +1,8 @@
 package hw04lrucache
 
-import "sync"
+import (
+	"sync"
+)
 
 type Key string
 
@@ -25,22 +27,37 @@ func NewCache(capacity int) Cache {
 	}
 }
 
+// Item structure to store in queue.
+type queueItem struct {
+	Value interface{}
+	Key   Key
+}
+
 func (c *lruCache) Set(key Key, value interface{}) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	item, found := c.items[key]
 	if found {
-		item.Value = value
+		item.Value = queueItem{
+			Key:   key,
+			Value: value,
+		}
 		c.queue.MoveToFront(item)
 		c.items[key] = item
 	} else {
-		newItem := c.queue.PushFront(value)
+		newItem := c.queue.PushFront(queueItem{
+			Key:   key,
+			Value: value,
+		})
 		c.items[key] = newItem
 
 		if c.queue.Len() > c.capacity {
-			c.queue.Remove(c.queue.Back())
-			delete(c.items, key)
+			itemToDiscard := c.queue.Back()
+			c.queue.Remove(itemToDiscard)
+
+			itemToDiscardKey := itemToDiscard.Value.(queueItem).Key
+			delete(c.items, itemToDiscardKey)
 		}
 	}
 
@@ -55,7 +72,7 @@ func (c *lruCache) Get(key Key) (interface{}, bool) {
 	item, found := c.items[key]
 	if found {
 		c.queue.MoveToFront(item)
-		val = item.Value
+		val = item.Value.(queueItem).Value
 	} else {
 		val = nil
 	}
