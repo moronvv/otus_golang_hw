@@ -15,6 +15,26 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("remove validation", func(t *testing.T) {
+		l := NewList()
+
+		// check first element deletion
+		fst := l.PushFront(10)
+		require.Equal(t, 1, l.Len())
+		l.Remove(fst)
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+
+		// check last element deletion
+		lst := l.PushBack(20)
+		require.Equal(t, 1, l.Len())
+		l.Remove(lst)
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
