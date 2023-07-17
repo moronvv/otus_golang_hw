@@ -13,14 +13,13 @@ type Task func() error
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
 	taskCh := make(chan Task, len(tasks))
+	running := sync.WaitGroup{}
 
 	tasksCnt := 0
-	tasksMtx := sync.Mutex{}
-	allTasksDone := make(chan struct{})
-
-	errorsExceeded := make(chan struct{})
-	errMtx := sync.Mutex{}
 	errCnt := 0
+
+	taskDone := make(chan struct{})
+	taskErr := make(chan struct{})
 
 	quit := make(chan struct{})
 
@@ -30,40 +29,20 @@ func Run(tasks []Task, n, m int) error {
 				select {
 				case <-quit:
 					return
-				case task := <-taskCh:
-					if err := task(); err != nil {
-						func() {
-							errMtx.Lock()
-							defer errMtx.Unlock()
-
-							select {
-							case <-quit:
-								return
-							default:
-								errCnt++
-								if errCnt >= m {
-									close(quit)
-									close(errorsExceeded)
-								}
-							}
-						}()
+				case task, ok := <-taskCh:
+					if !ok {
+						return
 					}
 
-					func() {
-						tasksMtx.Lock()
-						defer tasksMtx.Unlock()
+					running.Add(1)
 
-						select {
-						case <-quit:
-							return
-						default:
-							tasksCnt++
-							if tasksCnt >= len(tasks) {
-								close(quit)
-								close(allTasksDone)
-							}
-						}
-					}()
+					if err := task(); err != nil {
+						taskErr <- struct{}{}
+					}
+
+					taskDone <- struct{}{}
+
+					running.Done()
 				}
 			}
 		}()
@@ -72,14 +51,25 @@ func Run(tasks []Task, n, m int) error {
 	for _, task := range tasks {
 		taskCh <- task
 	}
+	close(taskCh)
 
-	<-quit
-	select {
-	case <-allTasksDone:
-		fmt.Println("success")
-		return nil
-	case <-errorsExceeded:
-		fmt.Println("fatal")
-		return ErrErrorsLimitExceeded
+	for {
+		select {
+		case <-taskDone:
+			tasksCnt++
+			if tasksCnt >= len(tasks) {
+				fmt.Println("success")
+				close(quit)
+				return nil
+			}
+		case <-taskErr:
+			errCnt++
+			if errCnt >= m {
+				fmt.Println("error")
+				close(quit)
+				// running.Wait()
+				return ErrErrorsLimitExceeded
+			}
+		}
 	}
 }
