@@ -10,66 +10,68 @@ var ErrErrorsLimitExceeded = errors.New("errors limit exceeded")
 
 type Task func() error
 
-// Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
-func Run(tasks []Task, n, m int) error {
-	taskCh := make(chan Task, len(tasks))
-	running := sync.WaitGroup{}
-
-	tasksCnt := 0
-	errCnt := 0
-
-	taskDone := make(chan struct{})
-	taskErr := make(chan struct{})
-
-	quit := make(chan struct{})
-
-	for i := 0; i < n; i++ {
-		go func() {
-			for {
-				select {
-				case <-quit:
-					return
-				case task, ok := <-taskCh:
-					if !ok {
-						return
-					}
-
-					running.Add(1)
-
-					if err := task(); err != nil {
-						taskErr <- struct{}{}
-					}
-
-					taskDone <- struct{}{}
-
-					running.Done()
-				}
-			}
-		}()
-	}
-
-	for _, task := range tasks {
-		taskCh <- task
-	}
-	close(taskCh)
+func worker(tasks chan Task, wg *sync.WaitGroup, allTasksDone chan struct{}, taskErr chan error, quit chan struct{}) {
+	defer wg.Done()
 
 	for {
 		select {
-		case <-taskDone:
-			tasksCnt++
-			if tasksCnt >= len(tasks) {
-				fmt.Println("success")
-				close(quit)
-				return nil
+		case <-quit:
+			return
+		case task, ok := <-tasks:
+			if !ok {
+				allTasksDone <- struct{}{}
+				return
 			}
-		case <-taskErr:
-			errCnt++
-			if errCnt >= m {
-				fmt.Println("error")
-				close(quit)
-				// running.Wait()
-				return ErrErrorsLimitExceeded
+
+			if err := task(); err != nil {
+				taskErr <- err
 			}
 		}
 	}
+}
+
+// Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
+func Run(tasks []Task, n, m int) error {
+	tasksCh := make(chan Task, len(tasks))
+	var result error
+
+	taskErr := make(chan error)
+	allTasksDone := make(chan struct{})
+	quit := make(chan struct{})
+	var workersWg sync.WaitGroup
+
+	errCnt := 0
+
+	for i := 0; i < n; i++ {
+		workersWg.Add(1)
+		go worker(tasksCh, &workersWg, allTasksDone, taskErr, quit)
+	}
+
+	for _, task := range tasks {
+		tasksCh <- task
+	}
+
+loop:
+	for {
+		select {
+		case <-taskErr:
+			errCnt++
+			if errCnt >= m {
+				close(quit)
+				close(tasksCh)
+				fmt.Println("error")
+				result = ErrErrorsLimitExceeded
+				break loop
+			}
+		case <-allTasksDone:
+			close(tasksCh)
+			fmt.Println("done")
+			break loop
+		}
+	}
+
+	fmt.Println("wait all workers done")
+	workersWg.Wait()
+
+	return result
 }
