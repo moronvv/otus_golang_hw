@@ -9,6 +9,17 @@ type (
 type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	// Place your code here.
-	return nil
+	pipelineChans := []In{}
+
+	pipelineChans = append(pipelineChans, in)
+	for i := 0; i < len(stages); i++ {
+		pipelineChans = append(pipelineChans, nil)
+	}
+
+	for i, stage := range stages {
+		pipelineChans[i+1] = stage(pipelineChans[i])
+	}
+
+	outCh := pipelineChans[len(stages)]
+	return outCh
 }
