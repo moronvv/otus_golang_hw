@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	pb "github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -70,7 +72,11 @@ func copyContent(fromFile, toFile *os.File, offset, limit int64) error {
 		return err
 	}
 
-	if _, err := io.CopyN(toFile, fromFile, limit); err != nil {
+	bar := pb.Full.Start64(limit)
+	defer bar.Finish()
+	fromFileWithBar := bar.NewProxyReader(fromFile)
+
+	if _, err := io.CopyN(toFile, fromFileWithBar, limit); err != nil {
 		if !errors.Is(err, io.EOF) {
 			return err
 		}
