@@ -20,11 +20,14 @@ func getSrcFile(path string, offset int64, limit *int64) (*os.File, error) {
 	}
 	fileSize := fileInfo.Size()
 
+	if fileSize == 0 {
+		return nil, ErrUnsupportedFile
+	}
+
 	// offset must be less then file size
 	if offset > fileSize {
 		return nil, ErrOffsetExceedsFileSize
 	}
-	// TODO: check inf file like /dev/urandom
 
 	// correct limit
 	if *limit == 0 {

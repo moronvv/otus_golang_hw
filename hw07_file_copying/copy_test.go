@@ -15,6 +15,26 @@ func TestCopy(t *testing.T) {
 		inPath = "./testdata/input.txt"
 	)
 
+	t.Run("offset > file length", func(t *testing.T) {
+		outFile, err := os.CreateTemp("", "output.txt")
+		require.NoError(t, err)
+		outPath := outFile.Name()
+		defer os.Remove(outPath)
+
+		err = Copy(inPath, outPath, 10000, 0)
+		require.ErrorIs(t, err, ErrOffsetExceedsFileSize)
+	})
+
+	t.Run("unsupported file", func(t *testing.T) {
+		outFile, err := os.CreateTemp("", "output.txt")
+		require.NoError(t, err)
+		outPath := outFile.Name()
+		defer os.Remove(outPath)
+
+		err = Copy("/dev/urandom", outPath, 0, 0)
+		require.ErrorIs(t, err, ErrUnsupportedFile)
+	})
+
 	testCases := []struct {
 		name     string
 		testPath string
