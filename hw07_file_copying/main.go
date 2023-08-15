@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 )
 
 var (
@@ -19,5 +20,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	Copy(from, to, offset, limit)
+	if err := Copy(from, to, offset, limit); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -12,23 +12,34 @@ import (
 var (
 	ErrUnsupportedFile       = errors.New("unsupported file")
 	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
+	ErrToAndFromAreSameFiles = errors.New("to and from must be different files")
 )
 
-// Get src file while checking edge cases.
-func getSrcFile(path string, offset int64, limit *int64) (*os.File, error) {
-	fileInfo, err := os.Stat(path)
+// Check files edge cases
+func checkFiles(fromPath, toPath string, offset int64, limit *int64) error {
+	fromFileInfo, err := os.Stat(fromPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	fileSize := fileInfo.Size()
+	toFileInfo, err := os.Stat(toPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	} else {
+		// check from and to are not the same file
+		if os.SameFile(fromFileInfo, toFileInfo) {
+			return ErrToAndFromAreSameFiles
+		}
+	}
 
+	fileSize := fromFileInfo.Size()
+	// incorrect file size
 	if fileSize == 0 {
-		return nil, ErrUnsupportedFile
+		return ErrUnsupportedFile
 	}
 
 	// offset must be less then file size
 	if offset > fileSize {
-		return nil, ErrOffsetExceedsFileSize
+		return ErrOffsetExceedsFileSize
 	}
 
 	// correct limit
@@ -36,6 +47,11 @@ func getSrcFile(path string, offset int64, limit *int64) (*os.File, error) {
 		*limit = fileSize
 	}
 
+	return nil
+}
+
+// Get src file.
+func getSrcFile(path string) (*os.File, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -86,7 +102,11 @@ func copyContent(fromFile, toFile *os.File, offset, limit int64) error {
 }
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
-	fromFile, err := getSrcFile(fromPath, offset, &limit)
+	if err := checkFiles(fromPath, toPath, offset, &limit); err != nil {
+		return err
+	}
+
+	fromFile, err := getSrcFile(fromPath)
 	if err != nil {
 		return err
 	}

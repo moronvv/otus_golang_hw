@@ -15,6 +15,11 @@ func TestCopy(t *testing.T) {
 		inPath = "./testdata/input.txt"
 	)
 
+	t.Run("from and to are same files", func(t *testing.T) {
+		err := Copy(inPath, inPath, 0, 0)
+		require.ErrorIs(t, err, ErrToAndFromAreSameFiles)
+	})
+
 	t.Run("offset > file length", func(t *testing.T) {
 		outFile, err := os.CreateTemp("", "output.txt")
 		require.NoError(t, err)
