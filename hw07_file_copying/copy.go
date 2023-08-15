@@ -15,7 +15,7 @@ var (
 	ErrToAndFromAreSameFiles = errors.New("to and from must be different files")
 )
 
-// Check files edge cases
+// Check files edge cases.
 func checkFiles(fromPath, toPath string, offset int64, limit *int64) error {
 	fromFileInfo, err := os.Stat(fromPath)
 	if err != nil {
@@ -24,11 +24,8 @@ func checkFiles(fromPath, toPath string, offset int64, limit *int64) error {
 	toFileInfo, err := os.Stat(toPath)
 	if err != nil && !os.IsNotExist(err) {
 		return err
-	} else {
-		// check from and to are not the same file
-		if os.SameFile(fromFileInfo, toFileInfo) {
-			return ErrToAndFromAreSameFiles
-		}
+	} else if os.SameFile(fromFileInfo, toFileInfo) { // check from and to are not the same file
+		return ErrToAndFromAreSameFiles
 	}
 
 	fileSize := fromFileInfo.Size()
