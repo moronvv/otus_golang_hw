@@ -73,14 +73,18 @@ func getEnvs(dirPath string, files []fs.DirEntry) (Environment, error) {
 	envs := Environment{}
 
 	for _, file := range files {
-		filePath := filepath.Join(dirPath, file.Name())
+		fileName := file.Name()
+		// skip files with '=' in name
+		if !strings.Contains(fileName, "=") {
+			filePath := filepath.Join(dirPath, fileName)
 
-		envValue, err := getEnvValue(filePath)
-		if err != nil {
-			return nil, err
+			envValue, err := getEnvValue(filePath)
+			if err != nil {
+				return nil, err
+			}
+
+			envs[file.Name()] = envValue
 		}
-
-		envs[file.Name()] = envValue
 	}
 
 	return envs, nil
