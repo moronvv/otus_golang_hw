@@ -16,7 +16,12 @@ func TestRunCmd(t *testing.T) {
 	})
 
 	t.Run("cmd not exists", func(t *testing.T) {
-		code := RunCmd([]string{"incorrect_cmd", "arg=1"}, envs)
+		code := RunCmd([]string{"./testdata/env/BAR", "arg=1"}, envs)
+		require.Equal(t, 1, code)
+	})
+
+	t.Run("got ExitErr", func(t *testing.T) {
+		code := RunCmd([]string{"sleep", "-u"}, envs)
 		require.Equal(t, 1, code)
 	})
 
