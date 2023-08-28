@@ -88,7 +88,7 @@ func TestValidate(t *testing.T) {
 			t.Parallel()
 
 			err := Validate(tt.in)
-			require.Equal(t, err, tt.expectedErr)
+			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
 }

@@ -2,15 +2,9 @@ package hw09structvalidator
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
-)
-
-const validationTag = "validate"
-
-var (
-	ErrNotStruct             = errors.New("input value is not structure")
-	ErrFieldTypeNotSupported = errors.New("field type not supported")
 )
 
 type ValidationError struct {
@@ -18,18 +12,58 @@ type ValidationError struct {
 	Err   error
 }
 
+func (e *ValidationError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *ValidationError) Unwrap() error {
+	return e.Err
+}
+
 type ValidationErrors []ValidationError
 
-func (v ValidationErrors) Error() string {
+func (e ValidationErrors) Error() string {
 	var builder strings.Builder
-	for _, ve := range v {
-		builder.WriteString(ve.Err.Error())
+	for _, ve := range e {
+		builder.WriteString(ve.Error())
 		builder.WriteRune('\n')
 	}
 	return builder.String()
 }
 
-type Tags map[string]string
+// Overrided errors.Is method.
+func (e ValidationErrors) Is(target error) bool {
+	var targetErr ValidationErrors
+	// check if outer error equal to target
+	if !errors.As(target, &targetErr) {
+		return false
+	}
+
+	// check lens of errors are equal
+	if len(e) != len(targetErr) {
+		return false
+	}
+
+	// check every error on field and err equality
+	for i := 0; i < len(targetErr); i++ {
+		fieldsAreEqual := e[i].Field == targetErr[i].Field
+		errsAreEqual := errors.Is(e[i].Err, targetErr[i].Err)
+		if !fieldsAreEqual || !errsAreEqual {
+			return false
+		}
+	}
+
+	return true
+}
+
+type Tags map[string]any
+
+const validationTag = "validate"
+
+var (
+	ErrNotStruct             = errors.New("input value is not structure")
+	ErrFieldTypeNotSupported = errors.New("not supported")
+)
 
 func parseTags(s string) Tags {
 	return nil
@@ -49,8 +83,9 @@ func validateSliceField(values reflect.Value, tags Tags) []error {
 	for i := 0; i < values.Len(); i++ {
 		value := values.Index(i)
 
+		fvKind := value.Kind()
 		//exhaustive:ignore
-		switch value.Kind() {
+		switch fvKind {
 		case reflect.Int:
 			if err := validateIntField(value, tags); err != nil {
 				errs = append(errs, err)
@@ -60,7 +95,7 @@ func validateSliceField(values reflect.Value, tags Tags) []error {
 				errs = append(errs, err)
 			}
 		default:
-			errs = append(errs, ErrFieldTypeNotSupported)
+			errs = append(errs, fmt.Errorf("field type %v %w", fvKind, ErrFieldTypeNotSupported))
 		}
 	}
 
@@ -70,8 +105,9 @@ func validateSliceField(values reflect.Value, tags Tags) []error {
 func validateField(field reflect.StructField, fieldValue reflect.Value, tags Tags) []ValidationError {
 	var validationErrors []ValidationError
 
+	fvKind := fieldValue.Kind()
 	//exhaustive:ignore
-	switch fieldValue.Kind() {
+	switch fvKind {
 	case reflect.Int:
 		if err := validateIntField(fieldValue, tags); err != nil {
 			validationErrors = append(validationErrors, ValidationError{
@@ -97,7 +133,7 @@ func validateField(field reflect.StructField, fieldValue reflect.Value, tags Tag
 	default:
 		validationErrors = append(validationErrors, ValidationError{
 			Field: field.Name,
-			Err:   ErrFieldTypeNotSupported,
+			Err:   fmt.Errorf("field type %v %w", fvKind, ErrFieldTypeNotSupported),
 		})
 	}
 
