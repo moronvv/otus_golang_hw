@@ -77,63 +77,57 @@ func validateStringField(value reflect.Value, tags Tags) error {
 	return nil
 }
 
-func validateSliceField(values reflect.Value, tags Tags) []error {
+func validateSliceField(validationFn func(reflect.Value, Tags) error, values reflect.Value, tags Tags) []error {
 	var errs []error
 
 	for i := 0; i < values.Len(); i++ {
 		value := values.Index(i)
 
-		fvKind := value.Kind()
-		//exhaustive:ignore
-		switch fvKind {
-		case reflect.Int:
-			if err := validateIntField(value, tags); err != nil {
-				errs = append(errs, err)
-			}
-		case reflect.String:
-			if err := validateStringField(value, tags); err != nil {
-				errs = append(errs, err)
-			}
-		default:
-			errs = append(errs, fmt.Errorf("field type %v %w", fvKind, ErrFieldTypeNotSupported))
+		if err := validationFn(value, tags); err != nil {
+			errs = append(errs, fmt.Errorf("element #%d: %w", i, err))
 		}
 	}
 
 	return errs
 }
 
-func validateField(field reflect.StructField, fieldValue reflect.Value, tags Tags) []ValidationError {
-	var validationErrors []ValidationError
+func validateField(field reflect.StructField, fieldValue reflect.Value, tags Tags) error {
+	var errs []error
 
-	fvKind := fieldValue.Kind()
+	fieldKind := field.Type.Kind()
 	//exhaustive:ignore
-	switch fvKind {
+	switch fieldKind {
 	case reflect.Int:
 		if err := validateIntField(fieldValue, tags); err != nil {
-			validationErrors = append(validationErrors, ValidationError{
-				Field: field.Name,
-				Err:   err,
-			})
+			errs = append(errs, err)
 		}
+
 	case reflect.String:
 		if err := validateStringField(fieldValue, tags); err != nil {
-			validationErrors = append(validationErrors, ValidationError{
-				Field: field.Name,
-				Err:   err,
-			})
+			errs = append(errs, err)
 		}
+
 	case reflect.Slice:
-		errs := validateSliceField(fieldValue, tags)
-		for _, err := range errs {
-			validationErrors = append(validationErrors, ValidationError{
-				Field: field.Name,
-				Err:   err,
-			})
+		sliceElemKind := field.Type.Elem().Kind()
+		//exhaustive:ignore
+		switch sliceElemKind {
+		case reflect.Int:
+			errs = validateSliceField(validateIntField, fieldValue, tags)
+		case reflect.String:
+			errs = validateSliceField(validateStringField, fieldValue, tags)
+		default:
+			return fmt.Errorf("field type []%v %w", sliceElemKind, ErrFieldTypeNotSupported)
 		}
+
 	default:
+		return fmt.Errorf("field type %v %w", fieldKind, ErrFieldTypeNotSupported)
+	}
+
+	var validationErrors ValidationErrors
+	for _, err := range errs {
 		validationErrors = append(validationErrors, ValidationError{
 			Field: field.Name,
-			Err:   fmt.Errorf("field type %v %w", fvKind, ErrFieldTypeNotSupported),
+			Err:   err,
 		})
 	}
 
@@ -155,8 +149,15 @@ func Validate(v interface{}) error {
 
 		tagString, exists := field.Tag.Lookup(validationTag)
 		if exists {
+			// TODO: errors processing
 			tags := parseTags(tagString)
-			validationErrs = append(validationErrs, validateField(field, fieldValue, tags)...)
+
+			err := validateField(field, fieldValue, tags)
+			var fieldValidationErrors ValidationErrors
+			if !errors.As(err, &fieldValidationErrors) {
+				return err
+			}
+			validationErrs = append(validationErrs, fieldValidationErrors...)
 		}
 	}
 

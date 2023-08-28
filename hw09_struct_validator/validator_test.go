@@ -2,7 +2,6 @@ package hw09structvalidator
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -46,30 +45,31 @@ type (
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
+		name        string
 		in          interface{}
 		expectedErr error
 	}{
 		{
+			name:        "input not a struct",
 			in:          func() {},
 			expectedErr: ErrNotStruct,
 		},
 		{
+			name: "unsupported field type",
 			in: NotSupportedType{
-				NotSupported:      'a',
-				NotSupportedSlice: []byte{'a'},
+				NotSupported: 'a',
 			},
-			expectedErr: ValidationErrors{
-				{
-					Field: "NotSupported",
-					Err:   ErrFieldTypeNotSupported,
-				},
-				{
-					Field: "NotSupportedSlice",
-					Err:   ErrFieldTypeNotSupported,
-				},
-			},
+			expectedErr: ErrFieldTypeNotSupported,
 		},
 		{
+			name: "unsupported slice field type",
+			in: NotSupportedType{
+				NotSupportedSlice: []byte{'a'},
+			},
+			expectedErr: ErrFieldTypeNotSupported,
+		},
+		{
+			name: "valid",
 			in: User{
 				ID:     strings.Repeat("0", 36),
 				Name:   "some name",
@@ -82,8 +82,8 @@ func TestValidate(t *testing.T) {
 		},
 	}
 
-	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			tt := tt
 			t.Parallel()
 
