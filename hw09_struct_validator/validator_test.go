@@ -16,11 +16,11 @@ type (
 	User struct {
 		ID     string `json:"id" validate:"len:36"`
 		Name   string
-		Age    int             `validate:"min:18|max:50"`
-		Email  string          `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
-		Role   UserRole        `validate:"in:admin,stuff"`
-		Phones []string        `validate:"len:11"`
-		meta   json.RawMessage //nolint:unused
+		Age    int      `validate:"min:18|max:50"`
+		Email  string   `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
+		Role   UserRole `validate:"in:admin,stuff"`
+		Phones []string `validate:"len:11"`
+		meta   json.RawMessage
 	}
 
 	App struct {
@@ -43,8 +43,28 @@ type (
 		NotSupported      byte   `validate:"max:42"`
 	}
 
-	InvalidTags struct {
-		IncorrectValidationTag string `validate:"in:"`
+	NonPartialTag struct {
+		Value string `validate:"in:"`
+	}
+
+	IncorrectLenTag struct {
+		Value string `validate:"len:two"`
+	}
+
+	IncorrectRegexTag struct {
+		Value string `validate:"regexp:non-(regexp-v$al"`
+	}
+
+	IncorrectMinTag struct {
+		Value int `validate:"min:one"`
+	}
+
+	IncorrectMaxTag struct {
+		Value int `validate:"max:three"`
+	}
+
+	IncorrectIntInTag struct {
+		Value int `validate:"in:one,two,three"`
 	}
 )
 
@@ -60,25 +80,44 @@ func TestValidate(t *testing.T) {
 			expectedErr: ErrNotStruct,
 		},
 		{
-			name: "unsupported field type",
-			in: NotSupportedType{
-				NotSupported: 'a',
-			},
+			name:        "unsupported field type",
+			in:          NotSupportedType{NotSupported: 'a'},
 			expectedErr: ErrFieldTypeNotSupported,
 		},
 		{
-			name: "unsupported slice field type",
-			in: NotSupportedType{
-				NotSupportedSlice: []byte{'a'},
-			},
+			name:        "unsupported slice field type",
+			in:          NotSupportedType{NotSupportedSlice: []byte{'a'}},
 			expectedErr: ErrFieldTypeNotSupported,
 		},
 		{
-			name: "invalid validation tag value",
-			in: InvalidTags{
-				IncorrectValidationTag: "foo",
-			},
-			expectedErr: ErrIncorrectValidationTagValue,
+			name:        "non-partial tag value",
+			in:          NonPartialTag{Value: "foo"},
+			expectedErr: ErrParsingTagValues,
+		},
+		{
+			name:        "invalid len tag value",
+			in:          IncorrectLenTag{Value: "foo"},
+			expectedErr: ErrTagValueShouldBeDigit,
+		},
+		{
+			name:        "invalid regexp tag value",
+			in:          IncorrectRegexTag{Value: "foo"},
+			expectedErr: ErrIncorrectTagRegexPattern,
+		},
+		{
+			name:        "invalid min tag value",
+			in:          IncorrectMinTag{Value: 1},
+			expectedErr: ErrTagValueShouldBeDigit,
+		},
+		{
+			name:        "invalid max tag value",
+			in:          IncorrectMaxTag{Value: 1},
+			expectedErr: ErrTagValueShouldBeDigit,
+		},
+		{
+			name:        "invalid int in tag value",
+			in:          IncorrectIntInTag{Value: 1},
+			expectedErr: ErrTagValueShouldBeDigit,
 		},
 		{
 			name: "invalid user",
@@ -115,7 +154,7 @@ func TestValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid respone",
+			name: "invalid response",
 			in: Response{
 				Code: 418,
 				Body: "some body",
@@ -140,7 +179,7 @@ func TestValidate(t *testing.T) {
 			},
 		},
 		{
-			name: "valid respone",
+			name: "valid response",
 			in: Response{
 				Code: 200,
 				Body: "some body",
@@ -185,27 +224,31 @@ func TestValidateTagValue(t *testing.T) {
 	}{
 		{
 			tagValue:    "",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:    "a",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:    "a:",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:    "a:b|",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:    "a:b|c",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
+		},
+		{
+			tagValue:    "a:b:c",
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:    "a:b|c:",
-			expectedErr: ErrIncorrectValidationTagValue,
+			expectedErr: ErrParsingTagValues,
 		},
 		{
 			tagValue:       "a:b",
