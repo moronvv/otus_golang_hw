@@ -2,6 +2,7 @@ package hw09structvalidator
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -38,8 +39,12 @@ type (
 	}
 
 	NotSupportedType struct {
-		NotSupported      byte   `validate:"max:42"`
 		NotSupportedSlice []byte `validate:"len:10"`
+		NotSupported      byte   `validate:"max:42"`
+	}
+
+	InvalidTags struct {
+		IncorrectValidationTag string `validate:"in:"`
 	}
 )
 
@@ -50,7 +55,7 @@ func TestValidate(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "input not a struct",
+			name:        "not a struct",
 			in:          func() {},
 			expectedErr: ErrNotStruct,
 		},
@@ -69,7 +74,86 @@ func TestValidate(t *testing.T) {
 			expectedErr: ErrFieldTypeNotSupported,
 		},
 		{
-			name: "valid",
+			name: "invalid validation tag value",
+			in: InvalidTags{
+				IncorrectValidationTag: "foo",
+			},
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			name: "invalid user",
+			in: User{
+				ID:     strings.Repeat("0", 20),
+				Name:   "some name",
+				Age:    10,
+				Email:  "invalid email",
+				Role:   "user",
+				Phones: []string{"+79161234567"},
+				meta:   []byte{'a', 'b', 'c'},
+			},
+			expectedErr: ValidationErrors{
+				{
+					Field: "ID",
+					Err:   ErrValidationIncorrectStringLen,
+				},
+				{
+					Field: "Age",
+					Err:   ErrValidationIntLessThenMin,
+				},
+				{
+					Field: "Email",
+					Err:   ErrValidationIncorrectRegexPattern,
+				},
+				{
+					Field: "Role",
+					Err:   ErrValidationNotOneOfRequiredValues,
+				},
+				{
+					Field: "Phones",
+					Err:   ErrValidationIncorrectStringLen,
+				},
+			},
+		},
+		{
+			name: "invalid respone",
+			in: Response{
+				Code: 418,
+				Body: "some body",
+			},
+			expectedErr: ValidationErrors{
+				{
+					Field: "Code",
+					Err:   ErrValidationNotOneOfRequiredValues,
+				},
+			},
+		},
+		{
+			name: "invalid app",
+			in: App{
+				Version: "1.0.10",
+			},
+			expectedErr: ValidationErrors{
+				{
+					Field: "Version",
+					Err:   ErrValidationIncorrectStringLen,
+				},
+			},
+		},
+		{
+			name: "valid respone",
+			in: Response{
+				Code: 200,
+				Body: "some body",
+			},
+		},
+		{
+			name: "valid app",
+			in: App{
+				Version: "1.1.0",
+			},
+		},
+		{
+			name: "valid user",
 			in: User{
 				ID:     strings.Repeat("0", 36),
 				Name:   "some name",
@@ -89,6 +173,58 @@ func TestValidate(t *testing.T) {
 
 			err := Validate(tt.in)
 			require.ErrorIs(t, err, tt.expectedErr)
+		})
+	}
+}
+
+func TestValidateTagValue(t *testing.T) {
+	tests := []struct {
+		tagValue       string
+		expectedResult ValidationTag
+		expectedErr    error
+	}{
+		{
+			tagValue:    "",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:    "a",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:    "a:",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:    "a:b|",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:    "a:b|c",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:    "a:b|c:",
+			expectedErr: ErrIncorrectValidationTagValue,
+		},
+		{
+			tagValue:       "a:b",
+			expectedResult: ValidationTag{"a": "b"},
+		},
+		{
+			tagValue:       "a:b|c:d",
+			expectedResult: ValidationTag{"a": "b", "c": "d"},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+
+			res, err := parseValidationTag(tt.tagValue)
+			require.ErrorIs(t, err, tt.expectedErr)
+			require.Equal(t, tt.expectedResult, res)
 		})
 	}
 }
