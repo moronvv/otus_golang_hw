@@ -187,11 +187,10 @@ func validateSliceField(
 
 		if err := validationFn(field, value, tag); err != nil {
 			var ves ValidationErrors
-			if errors.As(err, &ves) {
-				validationErrs = append(validationErrs, ves...)
-			} else {
+			if !errors.As(err, &ves) {
 				return fmt.Errorf("slice element #%d: %w", i, err)
 			}
+			validationErrs = append(validationErrs, ves...)
 		}
 	}
 
