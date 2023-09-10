@@ -1,0 +1,15 @@
+goos: darwin
+goarch: amd64
+pkg: github.com/moronvv/otus_golang_hw/hw10_program_optimization
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+                 │     old.txt      │               new.txt                │
+                 │      sec/op      │   sec/op     vs base                 │
+GetDomainStat-12   180752.265µ ± 5%   3.637µ ± 3%  -100.00% (p=0.000 n=10)
+
+                 │      old.txt      │                new.txt                │
+                 │       B/op        │     B/op      vs base                 │
+GetDomainStat-12   199262.231Ki ± 0%   5.328Ki ± 0%  -100.00% (p=0.000 n=10)
+
+                 │     old.txt     │               new.txt               │
+                 │    allocs/op    │ allocs/op   vs base                 │
+GetDomainStat-12   1900043.00 ± 0%   19.00 ± 0%  -100.00% (p=0.000 n=10)
