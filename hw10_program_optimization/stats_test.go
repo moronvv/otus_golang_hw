@@ -41,6 +41,6 @@ func TestGetDomainStat(t *testing.T) {
 
 func BenchmarkGetDomainStat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		GetDomainStat(bytes.NewBufferString(data), "unknown")
+		GetDomainStat(bytes.NewBufferString(data), "com")
 	}
 }
