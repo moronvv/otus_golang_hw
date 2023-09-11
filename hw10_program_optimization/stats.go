@@ -17,15 +17,15 @@ type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	stats := DomainStat{}
+	user := User{}
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		user, err := getUser(scanner.Bytes())
-		if err != nil {
+		if err := getUser(&user, scanner.Bytes()); err != nil {
 			return nil, err
 		}
 
-		if validDomain := getEmailDomain(user, domain); validDomain != "" {
+		if validDomain := getEmailDomain(&user, domain); validDomain != "" {
 			stats[validDomain]++
 		}
 	}
@@ -36,14 +36,12 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	return stats, nil
 }
 
-func getUser(line []byte) (*User, error) {
-	var user User
-
-	if err := easyjson.Unmarshal(line, &user); err != nil {
-		return nil, err
+func getUser(user *User, line []byte) error {
+	if err := easyjson.Unmarshal(line, user); err != nil {
+		return err
 	}
 
-	return &user, nil
+	return nil
 }
 
 func getEmailDomain(user *User, domain string) string {
