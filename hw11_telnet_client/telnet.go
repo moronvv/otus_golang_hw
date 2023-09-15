@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"net"
 	"time"
@@ -39,7 +40,7 @@ func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, ou
 func (c *client) Connect() error {
 	var err error
 
-	c.conn, err = net.Dial(network, c.address)
+	c.conn, err = net.DialTimeout(network, c.address, c.timeout)
 	if err != nil {
 		return err
 	}
@@ -52,11 +53,7 @@ func (c *client) Close() error {
 		return err
 	}
 
-	if err := c.conn.Close(); err != nil {
-		return err
-	}
-
-	return nil
+	return c.conn.Close()
 }
 
 func (c *client) Send() error {
@@ -64,11 +61,11 @@ func (c *client) Send() error {
 	for {
 		n, err := c.in.Read(buffer)
 		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
+			if !errors.Is(err, io.EOF) {
 				return err
 			}
+
+			break
 		}
 
 		if _, err := c.conn.Write(buffer[:n]); err != nil {
@@ -84,11 +81,11 @@ func (c *client) Receive() error {
 	for {
 		n, err := c.conn.Read(buffer)
 		if err != nil {
-			if err == io.EOF {
-				break
-			} else {
+			if !errors.Is(err, io.EOF) {
 				return err
 			}
+
+			break
 		}
 
 		if _, err := c.out.Write(buffer[:n]); err != nil {
