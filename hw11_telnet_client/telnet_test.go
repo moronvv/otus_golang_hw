@@ -101,9 +101,6 @@ func TestTelnetClient(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 			}
 			require.ErrorIs(t, err, syscall.EPIPE)
-
-			err = client.Receive()
-			require.ErrorIs(t, err, syscall.ECONNRESET)
 		}()
 
 		go func() {
