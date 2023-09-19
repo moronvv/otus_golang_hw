@@ -14,7 +14,12 @@ import (
 	"time"
 )
 
-func setup(ctx context.Context, cancel context.CancelFunc, address string, timeout time.Duration) (TelnetClient, error) {
+var (
+	address string
+	timeout time.Duration
+)
+
+func setup(ctx context.Context, cancel context.CancelFunc) (TelnetClient, error) {
 	client := NewTelnetClient(address, timeout, os.Stdin, os.Stdout)
 
 	if err := client.Connect(); err != nil {
@@ -61,37 +66,45 @@ func setup(ctx context.Context, cancel context.CancelFunc, address string, timeo
 	return client, nil
 }
 
-func teardown(client TelnetClient) error {
-	if err := client.Close(); err != nil {
-		return err
-	}
+func teardown(client TelnetClient, cancel context.CancelFunc) error {
+	defer cancel()
 
-	return nil
+	return client.Close()
 }
 
-func main() {
-	var timeout time.Duration
+func parseFlags() error {
 	flag.DurationVar(&timeout, "timeout", 10*time.Second, "timeout on connection")
 	flag.Parse()
 
 	host := flag.Arg(0)
 	if host == "" {
-		log.Fatal("host must be first command-line argument")
+		return errors.New("host must be first command-line argument")
 	}
-
 	port := flag.Arg(1)
 	if port == "" {
-		log.Fatal("port must be second command-line argument")
+		return errors.New("port must be second command-line argument")
+	}
+	address = net.JoinHostPort(host, port)
+
+	return nil
+}
+
+func main() {
+	if err := parseFlags(); err != nil {
+		log.Fatal(err)
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
 
-	client, err := setup(ctx, cancel, net.JoinHostPort(host, port), timeout)
+	client, err := setup(ctx, cancel)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer teardown(client)
+	defer func() {
+		if err := teardown(client, cancel); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	<-ctx.Done()
 }
