@@ -123,6 +123,12 @@ func TestTelnetClient(t *testing.T) {
 		wg.Wait()
 	})
 
+	t.Run("receiver not exists", func(t *testing.T) {
+		client := NewTelnetClient("127.0.0.1:80", time.Second, nil, nil)
+		err := client.Connect()
+		require.ErrorIs(t, err, syscall.ECONNREFUSED)
+	})
+
 	t.Run("timeout", func(t *testing.T) {
 		l, err := net.Listen("tcp", "127.0.0.1:")
 		require.NoError(t, err)
