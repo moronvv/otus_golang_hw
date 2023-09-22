@@ -40,11 +40,7 @@ func (c *client) Connect() error {
 	var err error
 
 	c.conn, err = net.DialTimeout(network, c.address, c.timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (c *client) Close() error {
@@ -63,11 +59,8 @@ func (c *client) Send() error {
 		return err
 	}
 
-	if _, err := c.conn.Write(buffer[:n]); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = c.conn.Write(buffer[:n])
+	return err
 }
 
 func (c *client) Receive() error {
@@ -78,9 +71,6 @@ func (c *client) Receive() error {
 		return err
 	}
 
-	if _, err := c.out.Write(buffer[:n]); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = c.out.Write(buffer[:n])
+	return err
 }
