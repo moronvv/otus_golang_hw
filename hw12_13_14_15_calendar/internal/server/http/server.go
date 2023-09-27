@@ -2,13 +2,11 @@ package internalhttp
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 )
-
-type Logger interface { // TODO
-}
 
 type Application interface { // TODO
 }
@@ -16,21 +14,23 @@ type Application interface { // TODO
 type Server struct { // TODO
 	ctx    context.Context
 	server *http.Server
-	logger Logger
+	logger *slog.Logger
 	app    Application
 }
 
 func setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/hello", helloRoute)
+	mux.HandleFunc("/ping", pingHandler)
 
 	return mux
 }
 
-func NewServer(logger Logger, app Application, cfg *config.ServerConf) *Server {
+func NewServer(logger *slog.Logger, app Application, cfg *config.ServerConf) *Server {
+	handler := newLoggerMiddleware(logger, setupRoutes())
+
 	server := &http.Server{
 		Addr:    cfg.Address,
-		Handler: setupRoutes(),
+		Handler: handler,
 	}
 
 	return &Server{

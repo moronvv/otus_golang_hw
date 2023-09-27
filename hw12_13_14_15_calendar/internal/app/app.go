@@ -2,18 +2,16 @@ package app
 
 import (
 	"context"
+	"log/slog"
 )
 
 type App struct { // TODO
 }
 
-type Logger interface { // TODO
-}
-
 type Storage interface { // TODO
 }
 
-func New(logger Logger, storage Storage) *App {
+func New(logger *slog.Logger, storage Storage) *App {
 	return &App{}
 }
 

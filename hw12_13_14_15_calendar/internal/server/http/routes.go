@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func helloRoute(w http.ResponseWriter, _ *http.Request) {
-	io.WriteString(w, "Hello World!\n")
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	io.WriteString(w, "pong\n")
 }

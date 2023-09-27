@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
@@ -45,31 +44,31 @@ func run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	logg := logger.New(config.Logger.Level)
+	logger := setupLogger()
 
 	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	calendar := app.New(logger, storage)
 
-	server := internalhttp.NewServer(logg, calendar, &config.Server)
+	server := internalhttp.NewServer(logger, calendar, &config.Server)
 
 	notifyCtx, notifyCancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer notifyCancel()
 
 	go func() {
-		logg.Info("calendar is running on " + config.Server.Address)
+		logger.Info("calendar is running on " + config.Server.Address)
 		if err := server.Start(notifyCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logg.Error("failed to start http server: " + err.Error())
+			logger.Error("failed to start http server: " + err.Error())
 		}
 	}()
 
 	<-notifyCtx.Done()
-	logg.Info("shutting down calendar...")
+	logger.Info("shutting down calendar...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer shutdownCancel()
 	if err := server.Stop(shutdownCtx); err != nil {
-		logg.Error("failed to stop http server: " + err.Error())
+		logger.Error("failed to stop http server: " + err.Error())
 	}
 }
 
