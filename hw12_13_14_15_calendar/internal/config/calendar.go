@@ -2,18 +2,20 @@ package config
 
 type Config struct {
 	Logger LoggerConf
-	// TODO
+	Server ServerConf
 }
 
 type LoggerConf struct {
 	Level string
-	// TODO
 }
 
-func NewConfig(logLvl string) *Config {
+type ServerConf struct {
+	Address string
+}
+
+func NewConfig(loggerConf LoggerConf, serverConf ServerConf) *Config {
 	return &Config{
-		Logger: LoggerConf{
-			Level: logLvl,
-		},
+		Logger: loggerConf,
+		Server: serverConf,
 	}
 }

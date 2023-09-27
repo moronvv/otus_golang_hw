@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
-	"os"
+	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
@@ -49,29 +50,26 @@ func run() {
 	storage := memorystorage.New()
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, &config.Server)
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
+	notifyCtx, notifyCancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
+	defer notifyCancel()
 
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		logg.Info("calendar is running on " + config.Server.Address)
+		if err := server.Start(notifyCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logg.Error("failed to start http server: " + err.Error())
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	<-notifyCtx.Done()
+	logg.Info("shutting down calendar...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer shutdownCancel()
+	if err := server.Stop(shutdownCtx); err != nil {
+		logg.Error("failed to stop http server: " + err.Error())
 	}
 }
 

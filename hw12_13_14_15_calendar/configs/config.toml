@@ -1,5 +1,8 @@
 [logger]
 level = "INFO"
 
+[server]
+address = ":8080"
+
 # TODO
 # ...

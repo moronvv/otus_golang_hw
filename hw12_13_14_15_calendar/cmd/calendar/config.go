@@ -15,5 +15,12 @@ func initConfig(cfgFile string) (*config.Config, error) {
 		return nil, err
 	}
 
-	return config.NewConfig(viper.GetString("logger.level")), nil
+	return config.NewConfig(
+		config.LoggerConf{
+			Level: viper.GetString("logger.level"),
+		},
+		config.ServerConf{
+			Address: viper.GetString("server.address"),
+		},
+	), nil
 }
