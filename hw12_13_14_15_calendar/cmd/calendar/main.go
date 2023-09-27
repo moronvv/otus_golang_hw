@@ -31,8 +31,7 @@ var (
 
 func init() {
 	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show app version")
-	cmd.Flags().StringVar(&configFile, "config", "", "path to config file")
-	cmd.MarkFlagRequired("config")
+	cmd.Flags().StringVar(&configFile, "config", "/etc/calendar/config.toml", "path to config file")
 }
 
 func run() {
@@ -41,7 +40,7 @@ func run() {
 		return
 	}
 
-	config, err := NewConfig(configFile)
+	config, err := initConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,45 +1,19 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/viper"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 )
 
-// При желании конфигурацию можно вынести в internal/config.
-// Организация конфига в main принуждает нас сужать API компонентов, использовать
-// при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
-type Config struct {
-	Logger LoggerConf
-	// TODO
-}
-
-type LoggerConf struct {
-	Level string
-	// TODO
-}
-
-func NewConfig(cfgFile string) (*Config, error) {
-	if err := initConfig(cfgFile); err != nil {
-		return nil, err
-	}
-
-	return &Config{
-		LoggerConf{
-			Level: viper.GetString("logger.level"),
-		},
-	}, nil
-}
-
-func initConfig(cfgFile string) error {
-	if cfgFile == "" {
-		return fmt.Errorf("config file path not set")
-	}
+func initConfig(cfgFile string) (*config.Config, error) {
 	viper.SetConfigFile(cfgFile)
 
 	viper.AutomaticEnv()
 
-	return viper.ReadInConfig()
-}
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, err
+	}
 
-// TODO
+	return config.NewConfig(viper.GetString("logger.level")), nil
+}
