@@ -2,33 +2,49 @@ package main
 
 import (
 	"context"
-	"flag"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/spf13/cobra"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
-var configFile string
+var (
+	configFile  string
+	showVersion bool
+
+	cmd = &cobra.Command{
+		Use:   "calendar",
+		Short: "API for calendar app",
+		Run: func(*cobra.Command, []string) {
+			run()
+		},
+	}
+)
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show app version")
+	cmd.Flags().StringVar(&configFile, "config", "", "path to config file")
+	cmd.MarkFlagRequired("config")
 }
 
-func main() {
-	flag.Parse()
-
-	if flag.Arg(0) == "version" {
+func run() {
+	if showVersion {
 		printVersion()
 		return
 	}
 
-	config := NewConfig()
+	config, err := NewConfig(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 	logg := logger.New(config.Logger.Level)
 
 	storage := memorystorage.New()
@@ -57,5 +73,11 @@ func main() {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
+	}
+}
+
+func main() {
+	if err := cmd.Execute(); err != nil {
+		log.Fatal(err)
 	}
 }
