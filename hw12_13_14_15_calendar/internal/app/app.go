@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -22,15 +23,15 @@ func New(logger *slog.Logger, storage storage.Storage) *App {
 	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, event *storage.Event) (*storage.Event, error) {
+func (a *App) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
 	return a.storage.CreateEvent(ctx, event)
 }
 
-func (a *App) GetEvents(ctx context.Context) ([]storage.Event, error) {
+func (a *App) GetEvents(ctx context.Context) ([]models.Event, error) {
 	return a.storage.GetEvents(ctx)
 }
 
-func (a *App) GetEvent(ctx context.Context, id uuid.UUID) (*storage.Event, error) {
+func (a *App) GetEvent(ctx context.Context, id uuid.UUID) (*models.Event, error) {
 	event, err := a.storage.GetEvent(ctx, id)
 	if err != nil {
 		return nil, err
@@ -42,7 +43,7 @@ func (a *App) GetEvent(ctx context.Context, id uuid.UUID) (*storage.Event, error
 	return event, nil
 }
 
-func (a *App) UpdateEvent(ctx context.Context, id uuid.UUID, event *storage.Event) (*storage.Event, error) {
+func (a *App) UpdateEvent(ctx context.Context, id uuid.UUID, event *models.Event) (*models.Event, error) {
 	event, err := a.GetEvent(ctx, id)
 	if err != nil {
 		return nil, err

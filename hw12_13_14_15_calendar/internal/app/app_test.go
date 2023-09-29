@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	mockedstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/mocked"
 )
 
-func getTestEvent() *storage.Event {
-	return &storage.Event{
+func getTestEvent() *models.Event {
+	return &models.Event{
 		Title: "test",
 	}
 }
@@ -40,7 +40,7 @@ func TestEventOperations(t *testing.T) {
 	t.Run("get events", func(t *testing.T) {
 		testEvent := getTestEvent()
 
-		mockStorage.EXPECT().GetEvents(mock.Anything).Return([]storage.Event{*testEvent}, nil).Once()
+		mockStorage.EXPECT().GetEvents(mock.Anything).Return([]models.Event{*testEvent}, nil).Once()
 
 		events, err := application.GetEvents(ctx)
 		require.NoError(t, err)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
@@ -15,7 +15,7 @@ func TestStorage(t *testing.T) {
 	store := memorystorage.New()
 	ctx := context.Background()
 
-	testEvent := &storage.Event{
+	testEvent := &models.Event{
 		Title:    "test",
 		Datetime: time.Now(),
 		Duration: 1 * time.Minute,
@@ -37,7 +37,7 @@ func TestStorage(t *testing.T) {
 	require.Equal(t, testEvent, event)
 
 	// update
-	updatedTestEvent := &storage.Event{
+	updatedTestEvent := &models.Event{
 		Title:    "updated",
 		Datetime: time.Now(),
 		Duration: 2 * time.Minute,
