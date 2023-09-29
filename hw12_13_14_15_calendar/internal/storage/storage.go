@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 )
 
