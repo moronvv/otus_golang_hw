@@ -3,6 +3,7 @@ module github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar
 go 1.21
 
 require (
+	github.com/google/uuid v1.3.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 )
