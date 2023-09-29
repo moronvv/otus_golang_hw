@@ -9,19 +9,19 @@ import (
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 )
 
-type Storage struct {
+type InMemoryEventStorage struct {
 	store map[uuid.UUID]models.Event
 	mu    sync.RWMutex
 }
 
-func New() *Storage {
-	return &Storage{
+func New() *InMemoryEventStorage {
+	return &InMemoryEventStorage{
 		store: map[uuid.UUID]models.Event{},
 		mu:    sync.RWMutex{},
 	}
 }
 
-func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Create(ctx context.Context, event *models.Event) (*models.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -31,7 +31,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event *models.Event) (*models
 	return event, nil
 }
 
-func (s *Storage) GetEvents(ctx context.Context) ([]models.Event, error) {
+func (s *InMemoryEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -43,7 +43,7 @@ func (s *Storage) GetEvents(ctx context.Context) ([]models.Event, error) {
 	return events, nil
 }
 
-func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (*models.Event, error) {
+func (s *InMemoryEventStorage) GetOne(ctx context.Context, id uuid.UUID) (*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -55,7 +55,7 @@ func (s *Storage) GetEvent(ctx context.Context, id uuid.UUID) (*models.Event, er
 	return &event, nil
 }
 
-func (s *Storage) UpdateEvent(ctx context.Context, id uuid.UUID, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Update(ctx context.Context, id uuid.UUID, event *models.Event) (*models.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -65,7 +65,7 @@ func (s *Storage) UpdateEvent(ctx context.Context, id uuid.UUID, event *models.E
 	return event, nil
 }
 
-func (s *Storage) DeleteEvent(ctx context.Context, id uuid.UUID) error {
+func (s *InMemoryEventStorage) Delete(ctx context.Context, id uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
