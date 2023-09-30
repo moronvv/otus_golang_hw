@@ -2,6 +2,12 @@ with-expecter: True
 packages:
   github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage:
     interfaces:
+      Storage:
+        config:
+          filename: "storage.go"
+          dir: "{{.InterfaceDir}}/mocked"
+          mockname: "Mock{{.InterfaceName}}"
+          outpkg: "mocked{{.PackageName}}"
       EventStorage:
         config:
           filename: "events.go"

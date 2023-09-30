@@ -16,14 +16,20 @@ func initConfig(cfgFile string) (*config.Config, error) {
 	}
 
 	return config.NewConfig(
-		config.LoggerConf{
+		&config.LoggerConf{
 			Level: viper.GetString("logger.level"),
 		},
-		config.ServerConf{
+		&config.ServerConf{
 			Address: viper.GetString("server.address"),
 		},
-		config.StorageConf{
+		&config.StorageConf{
 			Type: viper.GetString("storage.type"),
+		},
+		&config.DatabaseConf{
+			DSN:             viper.GetString("dsn"),
+			MaxOpenConns:    viper.GetInt("max_open_conns"),
+			MaxIdleConns:    viper.GetInt("max_idle_conns"),
+			ConnMaxLifetime: viper.GetDuration("conn_max_lifetime"),
 		},
 	), nil
 }

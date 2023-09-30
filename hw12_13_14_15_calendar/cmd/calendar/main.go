@@ -41,13 +41,13 @@ func run() {
 
 	ctx := context.Background()
 
-	config, err := initConfig(configFile)
+	cfg, err := initConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 	logger := setupLogger()
 
-	stores, err := initStorages(ctx, &config.Storage)
+	stores, err := initStorages(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,14 +55,14 @@ func run() {
 
 	calendar := app.New(logger, stores)
 
-	server := internalhttp.NewServer(logger, calendar, &config.Server)
+	server := internalhttp.NewServer(logger, calendar, cfg)
 
 	notifyCtx, notifyCancel := signal.NotifyContext(ctx,
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer notifyCancel()
 
 	go func() {
-		logger.Info("calendar is running on " + config.Server.Address)
+		logger.Info("calendar is running on " + cfg.Server.Address)
 		if err := server.Start(notifyCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("failed to start http server: " + err.Error())
 		}

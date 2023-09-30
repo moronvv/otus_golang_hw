@@ -25,11 +25,11 @@ func setupRoutes() *http.ServeMux {
 	return mux
 }
 
-func NewServer(logger *slog.Logger, app Application, cfg *config.ServerConf) *Server {
+func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server {
 	handler := newLoggerMiddleware(logger, setupRoutes())
 
 	server := &http.Server{
-		Addr:    cfg.Address,
+		Addr:    cfg.Server.Address,
 		Handler: handler,
 	}
 

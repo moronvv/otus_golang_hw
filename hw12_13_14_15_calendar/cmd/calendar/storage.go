@@ -7,13 +7,14 @@ import (
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
-func initStorages(ctx context.Context, storageConf *config.StorageConf) (*storage.Storages, error) {
+func initStorages(ctx context.Context, cfg *config.Config) (*storage.Storages, error) {
 	var store storage.Storage
 	var eventStorage storage.EventStorage
 
-	switch storageConf.Type {
+	switch cfg.Storage.Type {
 	case "in-memory":
 		store = memorystorage.NewStorage()
 		if err := store.Connect(ctx); err != nil {
@@ -21,10 +22,13 @@ func initStorages(ctx context.Context, storageConf *config.StorageConf) (*storag
 		}
 		eventStorage = memorystorage.NewEventStorage(store.(*memorystorage.InMemoryStorage))
 	case "sql":
-		// TODO: implement sql
-		return nil, fmt.Errorf("not implemented")
+		store = sqlstorage.NewStorage(cfg.Database)
+		if err := store.Connect(ctx); err != nil {
+			return nil, err
+		}
+		eventStorage = sqlstorage.NewEventStorage(store.(*sqlstorage.SqlStorage))
 	default:
-		return nil, fmt.Errorf("unsupported storage type %s", storageConf.Type)
+		return nil, fmt.Errorf("unsupported storage type %s", cfg.Storage.Type)
 	}
 
 	return &storage.Storages{

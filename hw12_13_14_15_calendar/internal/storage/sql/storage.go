@@ -1,20 +1,39 @@
 package sqlstorage
 
-import "context"
+import (
+	"context"
 
-type Storage struct { // TODO
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
+)
+
+type SqlStorage struct {
+	db  *sqlx.DB
+	cfg *config.DatabaseConf
 }
 
-func New() *Storage {
-	return &Storage{}
+func NewStorage(cfg *config.DatabaseConf) *SqlStorage {
+	return &SqlStorage{
+		cfg: cfg,
+	}
 }
 
-func (s *Storage) Connect(ctx context.Context) error {
-	// TODO
+func (s *SqlStorage) Connect(ctx context.Context) error {
+	db, err := sqlx.ConnectContext(ctx, "pgx", s.cfg.DSN)
+	if err != nil {
+		return err
+	}
+
+	db.SetMaxOpenConns(s.cfg.MaxOpenConns)
+	db.SetMaxIdleConns(s.cfg.MaxIdleConns)
+	db.SetConnMaxLifetime(s.cfg.ConnMaxLifetime)
+
+	s.db = db
 	return nil
 }
 
-func (s *Storage) Close(ctx context.Context) error {
-	// TODO
-	return nil
+func (s *SqlStorage) Close(ctx context.Context) error {
+	return s.db.Close()
 }
