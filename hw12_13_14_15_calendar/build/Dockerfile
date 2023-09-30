@@ -17,8 +17,8 @@ COPY . ${CODE_DIR}
 # иначе он не будет работать в alpine образе.
 ARG LDFLAGS
 RUN CGO_ENABLED=0 go build \
-        -ldflags "$LDFLAGS" \
-        -o ${BIN_FILE} cmd/calendar/*
+  -ldflags "$LDFLAGS" \
+  -o ${BIN_FILE} cmd/calendar/*
 
 # На выходе тонкий образ
 FROM alpine:3.9
@@ -31,6 +31,6 @@ ENV BIN_FILE "/opt/calendar/calendar-app"
 COPY --from=build ${BIN_FILE} ${BIN_FILE}
 
 ENV CONFIG_FILE /etc/calendar/config.toml
-COPY ./configs/config.toml ${CONFIG_FILE}
+COPY ./configs/calendar.toml ${CONFIG_FILE}
 
 CMD ${BIN_FILE} -config ${CONFIG_FILE}

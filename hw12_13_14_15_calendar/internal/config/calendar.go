@@ -3,41 +3,27 @@ package config
 import "time"
 
 type Config struct {
-	Logger   *LoggerConf
-	Server   *ServerConf
-	Storage  *StorageConf
-	Database *DatabaseConf
+	Logger   LoggerConf   `mapstructure:"logger"`
+	Server   ServerConf   `mapstructure:"server"`
+	Storage  StorageConf  `mapstructure:"storage"`
+	Database DatabaseConf `mapstructure:"database"`
 }
 
 type LoggerConf struct {
-	Level string
+	Level string `mapstructure:"level"`
 }
 
 type ServerConf struct {
-	Address string
+	Address string `mapstructure:"address"`
 }
 
 type StorageConf struct {
-	Type string
+	Type string `mapstructure:"type"`
 }
 
 type DatabaseConf struct {
-	DSN             string
-	MaxOpenConns    int
-	MaxIdleConns    int
-	ConnMaxLifetime time.Duration
-}
-
-func NewConfig(
-	loggerConf *LoggerConf,
-	serverConf *ServerConf,
-	storageConf *StorageConf,
-	databaseConf *DatabaseConf,
-) *Config {
-	return &Config{
-		Logger:   loggerConf,
-		Server:   serverConf,
-		Storage:  storageConf,
-		Database: databaseConf,
-	}
+	DSN             string        `mapstructure:"type"`
+	MaxOpenConns    int           `mapstructure:"max_open_conns"`
+	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 }

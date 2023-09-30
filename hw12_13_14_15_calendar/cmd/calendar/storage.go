@@ -22,7 +22,7 @@ func initStorages(ctx context.Context, cfg *config.Config) (*storage.Storages, e
 		}
 		eventStorage = memorystorage.NewEventStorage(store.(*memorystorage.InMemoryStorage))
 	case "sql":
-		store = sqlstorage.NewStorage(cfg.Database)
+		store = sqlstorage.NewStorage(&cfg.Database)
 		if err := store.Connect(ctx); err != nil {
 			return nil, err
 		}
