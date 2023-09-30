@@ -1,8 +1,9 @@
 package config
 
 type Config struct {
-	Logger LoggerConf
-	Server ServerConf
+	Logger  LoggerConf
+	Server  ServerConf
+	Storage StorageConf
 }
 
 type LoggerConf struct {
@@ -13,9 +14,18 @@ type ServerConf struct {
 	Address string
 }
 
-func NewConfig(loggerConf LoggerConf, serverConf ServerConf) *Config {
+type StorageConf struct {
+	Type string
+}
+
+func NewConfig(
+	loggerConf LoggerConf,
+	serverConf ServerConf,
+	storageConf StorageConf,
+) *Config {
 	return &Config{
-		Logger: loggerConf,
-		Server: serverConf,
+		Logger:  loggerConf,
+		Server:  serverConf,
+		Storage: storageConf,
 	}
 }

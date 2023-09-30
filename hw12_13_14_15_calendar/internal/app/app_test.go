@@ -11,6 +11,7 @@ import (
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 	mockedstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/mocked"
 )
 
@@ -23,7 +24,9 @@ func getTestEvent() *models.Event {
 func TestEventOperations(t *testing.T) {
 	ctx := context.Background()
 	mockEventStorage := mockedstorage.NewMockEventStorage(t)
-	application := app.New(&slog.Logger{}, mockEventStorage)
+	application := app.New(&slog.Logger{}, &storage.Storages{
+		Events: mockEventStorage,
+	})
 
 	t.Run("create event", func(t *testing.T) {
 		testEvent := getTestEvent()

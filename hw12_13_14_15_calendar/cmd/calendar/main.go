@@ -13,7 +13,6 @@ import (
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	internalhttp "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
 var (
@@ -40,18 +39,25 @@ func run() {
 		return
 	}
 
+	ctx := context.Background()
+
 	config, err := initConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 	logger := setupLogger()
 
-	storage := memorystorage.New()
-	calendar := app.New(logger, storage)
+	stores, err := initStorages(ctx, &config.Storage)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closeStorages(ctx, stores)
+
+	calendar := app.New(logger, stores)
 
 	server := internalhttp.NewServer(logger, calendar, &config.Server)
 
-	notifyCtx, notifyCancel := signal.NotifyContext(context.Background(),
+	notifyCtx, notifyCancel := signal.NotifyContext(ctx,
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer notifyCancel()
 

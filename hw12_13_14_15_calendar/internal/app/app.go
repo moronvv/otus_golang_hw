@@ -12,27 +12,27 @@ import (
 )
 
 type App struct {
-	logger  *slog.Logger
-	storage storage.EventStorage
+	logger *slog.Logger
+	stores *storage.Storages
 }
 
-func New(logger *slog.Logger, storage storage.EventStorage) *App {
+func New(logger *slog.Logger, storage *storage.Storages) *App {
 	return &App{
-		logger:  logger,
-		storage: storage,
+		logger: logger,
+		stores: storage,
 	}
 }
 
 func (a *App) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
-	return a.storage.Create(ctx, event)
+	return a.stores.Events.Create(ctx, event)
 }
 
 func (a *App) GetEvents(ctx context.Context) ([]models.Event, error) {
-	return a.storage.GetMany(ctx)
+	return a.stores.Events.GetMany(ctx)
 }
 
 func (a *App) GetEvent(ctx context.Context, id uuid.UUID) (*models.Event, error) {
-	event, err := a.storage.GetOne(ctx, id)
+	event, err := a.stores.Events.GetOne(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (a *App) UpdateEvent(ctx context.Context, id uuid.UUID, event *models.Event
 		return nil, fmt.Errorf("%w; id=%s", ErrDocumentNotFound, id)
 	}
 
-	return a.storage.Update(ctx, id, event)
+	return a.stores.Events.Update(ctx, id, event)
 }
 
 func (a *App) DeleteEvent(ctx context.Context, id uuid.UUID) error {
@@ -64,5 +64,5 @@ func (a *App) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("%w; id=%s", ErrDocumentNotFound, id)
 	}
 
-	return a.storage.Delete(ctx, id)
+	return a.stores.Events.Delete(ctx, id)
 }

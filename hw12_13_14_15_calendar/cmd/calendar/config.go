@@ -22,5 +22,8 @@ func initConfig(cfgFile string) (*config.Config, error) {
 		config.ServerConf{
 			Address: viper.GetString("server.address"),
 		},
+		config.StorageConf{
+			Type: viper.GetString("storage.type"),
+		},
 	), nil
 }
