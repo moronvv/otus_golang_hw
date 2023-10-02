@@ -27,6 +27,9 @@ run-img: build-img
 version: build
 	$(BIN) --version
 
+test:
+	go test -race ./internal/...
+
 test-local:
 	CALENDAR_DATABASE_DSN=$(DB_TEST_DSN) go test -race ./internal/...
 
@@ -45,4 +48,4 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
-.PHONY: build run build-img run-img version test-local lint up-related-services cleanup migrate-local
+.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local
