@@ -26,7 +26,7 @@ func initStorages(ctx context.Context, cfg *config.Config) (*storage.Storages, e
 		if err := store.Connect(ctx); err != nil {
 			return nil, err
 		}
-		eventStorage = sqlstorage.NewEventStorage(store.(*sqlstorage.SqlStorage))
+		eventStorage = sqlstorage.NewEventStorage(store.(*sqlstorage.SQLStorage))
 	default:
 		return nil, fmt.Errorf("unsupported storage type %s", cfg.Storage.Type)
 	}

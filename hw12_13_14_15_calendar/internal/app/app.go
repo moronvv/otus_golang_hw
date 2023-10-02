@@ -42,11 +42,11 @@ func (a *App) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
 }
 
 func (a *App) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
-	event, err := a.GetEvent(ctx, id)
+	oldEvent, err := a.GetEvent(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if event == nil {
+	if oldEvent == nil {
 		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
 	}
 

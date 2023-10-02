@@ -14,7 +14,8 @@ type LoggerConf struct {
 }
 
 type ServerConf struct {
-	Address string `mapstructure:"address"`
+	Address        string        `mapstructure:"address"`
+	RequestTimeout time.Duration `mapstructure:"request_timeout"`
 }
 
 type StorageConf struct {

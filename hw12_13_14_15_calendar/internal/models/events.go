@@ -14,5 +14,5 @@ type Event struct {
 	ID           int64          `db:"id"`
 	NotifyBefore time.Duration  `db:"notify_before"`
 	Duration     time.Duration  `db:"duration"`
-	UserId       uuid.UUID      `db:"user_id"`
+	UserID       uuid.UUID      `db:"user_id"`
 }

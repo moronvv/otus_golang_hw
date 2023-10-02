@@ -3,6 +3,7 @@ level = "DEBUG"
 
 [server]
 address = ":8080"
+request_timeout = "1s"
 
 [storage]
 type = "sql"  # in-memory, sql

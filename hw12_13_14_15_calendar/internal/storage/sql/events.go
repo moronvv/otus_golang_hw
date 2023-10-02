@@ -37,17 +37,17 @@ const (
   `
 )
 
-type SqlEventStorage struct {
-	store *SqlStorage
+type SQLEventStorage struct {
+	store *SQLStorage
 }
 
-func NewEventStorage(store *SqlStorage) *SqlEventStorage {
-	return &SqlEventStorage{
+func NewEventStorage(store *SQLStorage) *SQLEventStorage {
+	return &SQLEventStorage{
 		store: store,
 	}
 }
 
-func (s *SqlEventStorage) Create(ctx context.Context, event *models.Event) (*models.Event, error) {
+func (s *SQLEventStorage) Create(ctx context.Context, event *models.Event) (*models.Event, error) {
 	stmt, err := s.store.DB.PrepareNamedContext(ctx, createQuery)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (s *SqlEventStorage) Create(ctx context.Context, event *models.Event) (*mod
 	return event, nil
 }
 
-func (s *SqlEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
+func (s *SQLEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
 	var events []models.Event
 	if err := s.store.DB.SelectContext(ctx, &events, getManyQuery); err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (s *SqlEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
 	return events, nil
 }
 
-func (s *SqlEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
+func (s *SQLEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
 	var event models.Event
 	if err := s.store.DB.GetContext(ctx, &event, getOneQuery, id); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
@@ -78,7 +78,7 @@ func (s *SqlEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, 
 	return &event, nil
 }
 
-func (s *SqlEventStorage) Update(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
+func (s *SQLEventStorage) Update(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
 	event.ID = id
 	if _, err := s.store.DB.NamedExecContext(ctx, updateQuery, event); err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (s *SqlEventStorage) Update(ctx context.Context, id int64, event *models.Ev
 	return event, nil
 }
 
-func (s *SqlEventStorage) Delete(ctx context.Context, id int64) error {
+func (s *SQLEventStorage) Delete(ctx context.Context, id int64) error {
 	if _, err := s.store.DB.ExecContext(ctx, deleteQuery, id); err != nil {
 		return err
 	}

@@ -12,7 +12,6 @@ type Application interface { // TODO
 }
 
 type Server struct { // TODO
-	ctx    context.Context
 	server *http.Server
 	logger *slog.Logger
 	app    Application
@@ -29,8 +28,9 @@ func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server
 	handler := newLoggerMiddleware(logger, setupRoutes())
 
 	server := &http.Server{
-		Addr:    cfg.Server.Address,
-		Handler: handler,
+		Addr:              cfg.Server.Address,
+		Handler:           handler,
+		ReadHeaderTimeout: cfg.Server.RequestTimeout,
 	}
 
 	return &Server{
@@ -40,11 +40,11 @@ func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server
 	}
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server) Start(context.Context) error {
 	return s.server.ListenAndServe()
 }
 
-func (s *Server) Stop(ctx context.Context) error {
+func (s *Server) Stop(context.Context) error {
 	// TODO
 	return nil
 }

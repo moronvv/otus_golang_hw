@@ -19,22 +19,22 @@ func NewEventStorage(store *InMemoryStorage) *InMemoryEventStorage {
 	}
 }
 
-func (s *InMemoryEventStorage) Create(ctx context.Context, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Create(_ context.Context, event *models.Event) (*models.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.store.seqId++
-	event.ID = s.store.seqId
+	s.store.seqID++
+	event.ID = s.store.seqID
 	s.store.events[event.ID] = *event
 
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
+func (s *InMemoryEventStorage) GetMany(_ context.Context) ([]models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	var events []models.Event
+	events := []models.Event{}
 	for _, event := range s.store.events {
 		events = append(events, event)
 	}
@@ -42,7 +42,7 @@ func (s *InMemoryEventStorage) GetMany(ctx context.Context) ([]models.Event, err
 	return events, nil
 }
 
-func (s *InMemoryEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
+func (s *InMemoryEventStorage) GetOne(_ context.Context, id int64) (*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -54,7 +54,7 @@ func (s *InMemoryEventStorage) GetOne(ctx context.Context, id int64) (*models.Ev
 	return &event, nil
 }
 
-func (s *InMemoryEventStorage) Update(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Update(_ context.Context, id int64, event *models.Event) (*models.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (s *InMemoryEventStorage) Update(ctx context.Context, id int64, event *mode
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) Delete(ctx context.Context, id int64) error {
+func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

@@ -9,24 +9,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	goose "github.com/pressly/goose/v3"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	sqlstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/utils"
-	goose "github.com/pressly/goose/v3"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
-var migrationsDir string = filepath.Join(utils.Root, "migrations")
+var migrationsDir = filepath.Join(utils.Root, "migrations")
 
-type SqlStorageSuite struct {
+type SQLStorageSuite struct {
 	suite.Suite
-	store      *sqlstorage.SqlStorage
-	eventStore *sqlstorage.SqlEventStorage
+	store      *sqlstorage.SQLStorage
+	eventStore *sqlstorage.SQLEventStorage
 }
 
-func (s *SqlStorageSuite) SetupSuite() {
+func (s *SQLStorageSuite) SetupSuite() {
 	cfg := &config.DatabaseConf{
 		DSN:             os.Getenv("CALENDAR_DATABASE_DSN"),
 		MaxOpenConns:    1,
@@ -44,7 +45,7 @@ func (s *SqlStorageSuite) SetupSuite() {
 	s.eventStore = sqlstorage.NewEventStorage(s.store)
 }
 
-func (s *SqlStorageSuite) TearDownSuite() {
+func (s *SQLStorageSuite) TearDownSuite() {
 	err := goose.DownTo(s.store.DB.DB, migrationsDir, 0)
 	require.NoError(s.T(), err)
 
@@ -52,7 +53,7 @@ func (s *SqlStorageSuite) TearDownSuite() {
 	require.NoError(s.T(), err)
 }
 
-func (s *SqlStorageSuite) TestEventStorage() {
+func (s *SQLStorageSuite) TestEventStorage() {
 	t := s.T()
 	ctx := context.Background()
 	eventStore := s.eventStore
@@ -65,7 +66,7 @@ func (s *SqlStorageSuite) TestEventStorage() {
 		},
 		Datetime: time.Now().UTC(),
 		Duration: 1 * time.Minute,
-		UserId:   uuid.New(),
+		UserID:   uuid.New(),
 	}
 
 	// create
@@ -92,7 +93,7 @@ func (s *SqlStorageSuite) TestEventStorage() {
 		},
 		Datetime: time.Now().UTC(),
 		Duration: 2 * time.Minute,
-		UserId:   uuid.New(),
+		UserID:   uuid.New(),
 	}
 	event, err = eventStore.Update(ctx, id, updatedTestEvent)
 	require.NoError(t, err)
@@ -109,5 +110,5 @@ func (s *SqlStorageSuite) TestEventStorage() {
 func TestSqlStorageSuite(t *testing.T) {
 	t.Skip("Skip before setting postgres container in ci/cd")
 
-	suite.Run(t, new(SqlStorageSuite))
+	suite.Run(t, new(SQLStorageSuite))
 }
