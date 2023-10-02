@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -54,7 +53,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("get event", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 		testEvent := getTestEvent()
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(testEvent, nil).Once()
@@ -67,7 +66,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("get event no doc", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
 
@@ -79,7 +78,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("update event", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 		testEvent := getTestEvent()
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(testEvent, nil).Once()
@@ -93,7 +92,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("update event no doc", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 		testEvent := getTestEvent()
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
@@ -106,7 +105,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("delete event", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 		testEvent := getTestEvent()
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(testEvent, nil).Once()
@@ -119,7 +118,7 @@ func TestEventOperations(t *testing.T) {
 	})
 
 	t.Run("delete event no doc", func(t *testing.T) {
-		id := uuid.New()
+		var id int64 = 1
 
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
 

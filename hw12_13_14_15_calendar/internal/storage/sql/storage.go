@@ -5,12 +5,11 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 )
 
 type SqlStorage struct {
-	db  *sqlx.DB
+	DB  *sqlx.DB
 	cfg *config.DatabaseConf
 }
 
@@ -30,10 +29,10 @@ func (s *SqlStorage) Connect(ctx context.Context) error {
 	db.SetMaxIdleConns(s.cfg.MaxIdleConns)
 	db.SetConnMaxLifetime(s.cfg.ConnMaxLifetime)
 
-	s.db = db
+	s.DB = db
 	return nil
 }
 
 func (s *SqlStorage) Close(ctx context.Context) error {
-	return s.db.Close()
+	return s.DB.Close()
 }

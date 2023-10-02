@@ -7,6 +7,7 @@ LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%d
 DB_DRIVER=postgres
 DB_MIGRATIONS_DIR=./migrations
 DB_LOCAL_DSN="host=localhost user=user password=dbpass dbname=calendar sslmode=disable"
+DB_TEST_DSN="host=localhost user=user password=dbpass dbname=test sslmode=disable"
 
 build:
 	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
@@ -24,10 +25,10 @@ run-img: build-img
 	docker run $(DOCKER_IMG)
 
 version: build
-	$(BIN) version
+	$(BIN) --version
 
-test:
-	go test -race ./internal/... ./pkg/...
+test-local:
+	CALENDAR_DATABASE_DSN=$(DB_TEST_DSN) go test -race ./internal/...
 
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.50.1
@@ -44,4 +45,4 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
-.PHONY: build run build-img run-img version test lint up-related-services migrate-local
+.PHONY: build run build-img run-img version test-local lint up-related-services cleanup migrate-local

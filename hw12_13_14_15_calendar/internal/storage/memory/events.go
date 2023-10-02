@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/google/uuid"
-
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 )
 
@@ -25,7 +23,8 @@ func (s *InMemoryEventStorage) Create(ctx context.Context, event *models.Event) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	event.ID = uuid.New()
+	s.store.seqId++
+	event.ID = s.store.seqId
 	s.store.events[event.ID] = *event
 
 	return event, nil
@@ -43,7 +42,7 @@ func (s *InMemoryEventStorage) GetMany(ctx context.Context) ([]models.Event, err
 	return events, nil
 }
 
-func (s *InMemoryEventStorage) GetOne(ctx context.Context, id uuid.UUID) (*models.Event, error) {
+func (s *InMemoryEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -55,7 +54,7 @@ func (s *InMemoryEventStorage) GetOne(ctx context.Context, id uuid.UUID) (*model
 	return &event, nil
 }
 
-func (s *InMemoryEventStorage) Update(ctx context.Context, id uuid.UUID, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Update(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -65,7 +64,7 @@ func (s *InMemoryEventStorage) Update(ctx context.Context, id uuid.UUID, event *
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *InMemoryEventStorage) Delete(ctx context.Context, id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

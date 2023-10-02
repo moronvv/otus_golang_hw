@@ -22,7 +22,7 @@ type StorageConf struct {
 }
 
 type DatabaseConf struct {
-	DSN             string        `mapstructure:"type"`
+	DSN             string        `mapstructure:"dsn"`
 	MaxOpenConns    int           `mapstructure:"max_open_conns"`
 	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`

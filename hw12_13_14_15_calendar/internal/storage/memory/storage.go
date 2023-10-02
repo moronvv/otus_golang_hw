@@ -3,13 +3,12 @@ package memorystorage
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 )
 
 type InMemoryStorage struct {
-	events map[uuid.UUID]models.Event
+	seqId  int64
+	events map[int64]models.Event
 }
 
 func NewStorage() *InMemoryStorage {
@@ -17,7 +16,8 @@ func NewStorage() *InMemoryStorage {
 }
 
 func (s *InMemoryStorage) Connect(ctx context.Context) error {
-	s.events = map[uuid.UUID]models.Event{}
+	s.seqId = 0
+	s.events = map[int64]models.Event{}
 
 	return nil
 }
