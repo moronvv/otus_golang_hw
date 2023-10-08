@@ -59,17 +59,24 @@ func (s *InMemoryEventStorage) Update(_ context.Context, id int64, event *models
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if _, ok := s.store.events[id]; !ok {
+		return nil, nil
+	}
+
 	event.ID = id
 	s.store.events[event.ID] = *event
 
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) error {
+func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	delete(s.store.events, id)
+	_, ok := s.store.events[id]
+	if ok {
+		delete(s.store.events, id)
+	}
 
-	return nil
+	return ok, nil
 }

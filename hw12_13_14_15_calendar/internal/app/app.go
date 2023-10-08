@@ -42,25 +42,25 @@ func (a *App) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
 }
 
 func (a *App) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
-	oldEvent, err := a.GetEvent(ctx, id)
+	updated, err := a.stores.Events.Update(ctx, id, event)
 	if err != nil {
 		return nil, err
 	}
-	if oldEvent == nil {
+	if updated == nil {
 		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
 	}
 
-	return a.stores.Events.Update(ctx, id, event)
+	return updated, err
 }
 
 func (a *App) DeleteEvent(ctx context.Context, id int64) error {
-	event, err := a.GetEvent(ctx, id)
+	ok, err := a.stores.Events.Delete(ctx, id)
 	if err != nil {
 		return err
 	}
-	if event == nil {
+	if !ok {
 		return fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
 	}
 
-	return a.stores.Events.Delete(ctx, id)
+	return nil
 }

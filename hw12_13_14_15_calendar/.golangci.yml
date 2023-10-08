@@ -1,5 +1,5 @@
 run:
-  go: 1.21
+  go: "1.21"
   tests: true
   build-tags:
     - bench
@@ -16,8 +16,6 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar)
-      - blank
-      - dot
 
 issues:
   exclude-rules:

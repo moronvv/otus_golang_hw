@@ -99,11 +99,34 @@ func (s *SQLStorageSuite) TestEventStorage() {
 	require.Equal(t, updatedTestEvent, event)
 
 	// delete
-	err = eventStore.Delete(ctx, id)
+	ok, err := eventStore.Delete(ctx, id)
 	require.NoError(t, err)
+	require.True(t, ok)
 	event, err = eventStore.GetOne(ctx, id)
 	require.NoError(t, err)
 	require.Empty(t, event)
+}
+
+func (s *SQLStorageSuite) TestSqlStorageSuiteDocNotFound() {
+	t := s.T()
+	ctx := context.Background()
+	eventStore := s.eventStore
+	var id int64 = 1337
+
+	// read
+	event, err := eventStore.GetOne(ctx, id)
+	require.NoError(t, err)
+	require.Nil(t, event)
+
+	// update
+	event, err = eventStore.Update(ctx, id, &models.Event{Title: "updated"})
+	require.NoError(t, err)
+	require.Nil(t, event)
+
+	// delete
+	ok, err := eventStore.Delete(ctx, id)
+	require.NoError(t, err)
+	require.False(t, ok)
 }
 
 func TestSqlStorageSuite(t *testing.T) {

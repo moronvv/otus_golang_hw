@@ -81,7 +81,6 @@ func TestEventOperations(t *testing.T) {
 		var id int64 = 1
 		testEvent := getTestEvent()
 
-		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(testEvent, nil).Once()
 		mockEventStorage.EXPECT().Update(mock.Anything, id, testEvent).Return(testEvent, nil).Once()
 
 		event, err := application.UpdateEvent(ctx, id, testEvent)
@@ -95,7 +94,7 @@ func TestEventOperations(t *testing.T) {
 		var id int64 = 1
 		testEvent := getTestEvent()
 
-		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
+		mockEventStorage.EXPECT().Update(mock.Anything, id, testEvent).Return(nil, nil).Once()
 
 		event, err := application.UpdateEvent(ctx, id, testEvent)
 		require.ErrorIs(t, err, app.ErrDocumentNotFound)
@@ -106,10 +105,8 @@ func TestEventOperations(t *testing.T) {
 
 	t.Run("delete event", func(t *testing.T) {
 		var id int64 = 1
-		testEvent := getTestEvent()
 
-		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(testEvent, nil).Once()
-		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(nil)
+		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(true, nil).Once()
 
 		err := application.DeleteEvent(ctx, id)
 		require.NoError(t, err)
@@ -120,7 +117,7 @@ func TestEventOperations(t *testing.T) {
 	t.Run("delete event no doc", func(t *testing.T) {
 		var id int64 = 1
 
-		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
+		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(false, nil).Once()
 
 		err := application.DeleteEvent(ctx, id)
 		require.ErrorIs(t, err, app.ErrDocumentNotFound)
