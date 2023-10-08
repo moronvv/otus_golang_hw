@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 const (
@@ -41,14 +42,14 @@ type SQLEventStorage struct {
 	store *SQLStorage
 }
 
-func NewEventStorage(store *SQLStorage) *SQLEventStorage {
+func NewEventStorage(store storage.Storage) storage.EventStorage {
 	return &SQLEventStorage{
-		store: store,
+		store: store.(*SQLStorage),
 	}
 }
 
 func (s *SQLEventStorage) Create(ctx context.Context, event *models.Event) (*models.Event, error) {
-	stmt, err := s.store.DB.PrepareNamedContext(ctx, createQuery)
+	stmt, err := s.store.db.PrepareNamedContext(ctx, createQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,7 @@ func (s *SQLEventStorage) Create(ctx context.Context, event *models.Event) (*mod
 
 func (s *SQLEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
 	var events []models.Event
-	if err := s.store.DB.SelectContext(ctx, &events, getManyQuery); err != nil {
+	if err := s.store.db.SelectContext(ctx, &events, getManyQuery); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +72,7 @@ func (s *SQLEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
 
 func (s *SQLEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
 	var event models.Event
-	if err := s.store.DB.GetContext(ctx, &event, getOneQuery, id); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if err := s.store.db.GetContext(ctx, &event, getOneQuery, id); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
@@ -80,7 +81,7 @@ func (s *SQLEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, 
 
 func (s *SQLEventStorage) Update(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
 	event.ID = id
-	if _, err := s.store.DB.NamedExecContext(ctx, updateQuery, event); err != nil {
+	if _, err := s.store.db.NamedExecContext(ctx, updateQuery, event); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +89,7 @@ func (s *SQLEventStorage) Update(ctx context.Context, id int64, event *models.Ev
 }
 
 func (s *SQLEventStorage) Delete(ctx context.Context, id int64) error {
-	if _, err := s.store.DB.ExecContext(ctx, deleteQuery, id); err != nil {
+	if _, err := s.store.db.ExecContext(ctx, deleteQuery, id); err != nil {
 		return err
 	}
 

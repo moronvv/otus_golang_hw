@@ -8,11 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
 )
 
-func getEventStorage(ctx context.Context) (*memorystorage.InMemoryEventStorage, error) {
-	store := memorystorage.NewStorage()
+func getEventStorage(ctx context.Context) (storage.EventStorage, error) {
+	store := memorystorage.NewStorage(nil)
 	if err := store.Connect(ctx); err != nil {
 		return nil, err
 	}

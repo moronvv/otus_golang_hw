@@ -4,22 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	goose "github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	sqlstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/utils"
 )
-
-var migrationsDir = filepath.Join(utils.Root, "migrations")
 
 type SQLStorageSuite struct {
 	suite.Suite
@@ -28,25 +23,29 @@ type SQLStorageSuite struct {
 }
 
 func (s *SQLStorageSuite) SetupSuite() {
+	ctx := context.Background()
+
 	cfg := &config.DatabaseConf{
 		DSN:             os.Getenv("CALENDAR_DATABASE_DSN"),
 		MaxOpenConns:    1,
 		MaxIdleConns:    1,
 		ConnMaxLifetime: 30 * time.Second,
 	}
-	s.store = sqlstorage.NewStorage(cfg)
+	s.store = sqlstorage.NewStorage(cfg).(*sqlstorage.SQLStorage)
 
 	err := s.store.Connect(context.Background())
 	require.NoError(s.T(), err)
 
-	err = goose.Up(s.store.DB.DB, migrationsDir)
+	err = s.store.MigrateAllUp(ctx)
 	require.NoError(s.T(), err)
 
-	s.eventStore = sqlstorage.NewEventStorage(s.store)
+	s.eventStore = sqlstorage.NewEventStorage(s.store).(*sqlstorage.SQLEventStorage)
 }
 
 func (s *SQLStorageSuite) TearDownSuite() {
-	err := goose.DownTo(s.store.DB.DB, migrationsDir, 0)
+	ctx := context.Background()
+
+	err := s.store.MigrateAllDown(ctx)
 	require.NoError(s.T(), err)
 
 	err = s.store.Close(context.Background())

@@ -3,7 +3,9 @@ package memorystorage
 import (
 	"context"
 
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 type InMemoryStorage struct {
@@ -11,7 +13,7 @@ type InMemoryStorage struct {
 	seqID  int64
 }
 
-func NewStorage() *InMemoryStorage {
+func NewStorage(*config.DatabaseConf) storage.Storage {
 	return &InMemoryStorage{}
 }
 

@@ -11,25 +11,25 @@ import (
 )
 
 func initStorages(ctx context.Context, cfg *config.Config) (*storage.Storages, error) {
-	var store storage.Storage
-	var eventStorage storage.EventStorage
+	var newStorageFn func(*config.DatabaseConf) storage.Storage
+	var newEventStorageFn func(storage.Storage) storage.EventStorage
 
 	switch cfg.Storage.Type {
 	case "in-memory":
-		store = memorystorage.NewStorage()
-		if err := store.Connect(ctx); err != nil {
-			return nil, err
-		}
-		eventStorage = memorystorage.NewEventStorage(store.(*memorystorage.InMemoryStorage))
+		newStorageFn = memorystorage.NewStorage
+		newEventStorageFn = memorystorage.NewEventStorage
 	case "sql":
-		store = sqlstorage.NewStorage(&cfg.Database)
-		if err := store.Connect(ctx); err != nil {
-			return nil, err
-		}
-		eventStorage = sqlstorage.NewEventStorage(store.(*sqlstorage.SQLStorage))
+		newStorageFn = sqlstorage.NewStorage
+		newEventStorageFn = sqlstorage.NewEventStorage
 	default:
 		return nil, fmt.Errorf("unsupported storage type %s", cfg.Storage.Type)
 	}
+
+	store := newStorageFn(&cfg.Database)
+	if err := store.Connect(ctx); err != nil {
+		return nil, err
+	}
+	eventStorage := newEventStorageFn(store)
 
 	return &storage.Storages{
 		DB:     store,

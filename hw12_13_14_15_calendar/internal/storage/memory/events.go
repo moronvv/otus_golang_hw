@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
 type InMemoryEventStorage struct {
@@ -12,9 +13,9 @@ type InMemoryEventStorage struct {
 	mu    sync.RWMutex
 }
 
-func NewEventStorage(store *InMemoryStorage) *InMemoryEventStorage {
+func NewEventStorage(store storage.Storage) storage.EventStorage {
 	return &InMemoryEventStorage{
-		store: store,
+		store: store.(*InMemoryStorage),
 		mu:    sync.RWMutex{},
 	}
 }
