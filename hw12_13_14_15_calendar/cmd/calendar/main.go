@@ -22,8 +22,8 @@ var (
 	cmd = &cobra.Command{
 		Use:   "calendar",
 		Short: "API for calendar app",
-		Run: func(*cobra.Command, []string) {
-			run()
+		RunE: func(*cobra.Command, []string) error {
+			return run()
 		},
 	}
 )
@@ -33,23 +33,23 @@ func init() {
 	cmd.Flags().StringVar(&configFile, "config", "/etc/calendar/config.toml", "path to config file")
 }
 
-func run() {
+func run() error {
 	if showVersion {
 		printVersion()
-		return
+		return nil
 	}
 
 	ctx := context.Background()
 
 	cfg, err := initConfig(configFile)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	logger := setupLogger()
 
 	stores, err := initStorages(ctx, cfg)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer closeStorages(ctx, stores)
 
@@ -69,13 +69,17 @@ func run() {
 	}()
 
 	<-notifyCtx.Done()
-	logger.Info("shutting down calendar...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer shutdownCancel()
+
+	logger.Info("shutting down calendar...")
 	if err := server.Stop(shutdownCtx); err != nil {
 		logger.Error("failed to stop http server: " + err.Error())
+		return err
 	}
+
+	return nil
 }
 
 func main() {

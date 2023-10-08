@@ -44,7 +44,6 @@ func (s *Server) Start(context.Context) error {
 	return s.server.ListenAndServe()
 }
 
-func (s *Server) Stop(context.Context) error {
-	// TODO
-	return nil
+func (s *Server) Stop(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }
