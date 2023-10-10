@@ -2,60 +2,88 @@ package main
 
 import (
 	"context"
-	"flag"
-	"os"
+	"errors"
+	"log"
+	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/spf13/cobra"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
+	internalhttp "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http"
 )
 
-var configFile string
+var (
+	configFile  string
+	showVersion bool
+
+	cmd = &cobra.Command{
+		Use:   "calendar",
+		Short: "API for calendar app",
+		RunE: func(*cobra.Command, []string) error {
+			return run()
+		},
+	}
+)
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show app version")
+	cmd.Flags().StringVar(&configFile, "config", "/etc/calendar/config.toml", "path to config file")
 }
 
-func main() {
-	flag.Parse()
-
-	if flag.Arg(0) == "version" {
+func run() error {
+	if showVersion {
 		printVersion()
-		return
+		return nil
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	ctx := context.Background()
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	cfg, err := initConfig(configFile)
+	if err != nil {
+		return err
+	}
+	logger := setupLogger()
 
-	server := internalhttp.NewServer(logg, calendar)
+	stores, err := initStorages(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer closeStorages(ctx, stores)
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
+	calendar := app.New(logger, stores)
+
+	server := internalhttp.NewServer(logger, calendar, cfg)
+
+	notifyCtx, notifyCancel := signal.NotifyContext(ctx,
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
+	defer notifyCancel()
 
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		logger.Info("calendar is running on " + cfg.Server.Address)
+		if err := server.Start(notifyCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("failed to start http server: " + err.Error())
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	<-notifyCtx.Done()
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer shutdownCancel()
+
+	logger.Info("shutting down calendar...")
+	if err := server.Stop(shutdownCtx); err != nil {
+		logger.Error("failed to stop http server: " + err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	if err := cmd.Execute(); err != nil {
+		log.Fatal(err)
 	}
 }

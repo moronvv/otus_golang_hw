@@ -2,25 +2,65 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
-type App struct { // TODO
+type App struct {
+	logger *slog.Logger
+	stores *storage.Storages
 }
 
-type Logger interface { // TODO
+func New(logger *slog.Logger, storage *storage.Storages) *App {
+	return &App{
+		logger: logger,
+		stores: storage,
+	}
 }
 
-type Storage interface { // TODO
+func (a *App) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
+	return a.stores.Events.Create(ctx, event)
 }
 
-func New(logger Logger, storage Storage) *App {
-	return &App{}
+func (a *App) GetEvents(ctx context.Context) ([]models.Event, error) {
+	return a.stores.Events.GetMany(ctx)
 }
 
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
+func (a *App) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
+	event, err := a.stores.Events.GetOne(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if event == nil {
+		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+	}
+
+	return event, nil
+}
+
+func (a *App) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
+	updated, err := a.stores.Events.Update(ctx, id, event)
+	if err != nil {
+		return nil, err
+	}
+	if updated == nil {
+		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+	}
+
+	return updated, err
+}
+
+func (a *App) DeleteEvent(ctx context.Context, id int64) error {
+	ok, err := a.stores.Events.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+	}
+
 	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
 }
-
-// TODO

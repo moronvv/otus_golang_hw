@@ -1,0 +1,15 @@
+[logger]
+level = "DEBUG"
+
+[server]
+address = ":8080"
+request_timeout = "1s"
+
+[storage]
+type = "sql"  # in-memory, sql
+
+[database]
+dsn = "host=localhost user=user password=dbpass dbname=calendar sslmode=disable"
+max_open_conns = 5
+max_idle_conns = 2
+conn_max_lifetime = "1m"

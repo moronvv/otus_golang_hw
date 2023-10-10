@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:16
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=calendar
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=dbpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init_db:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
