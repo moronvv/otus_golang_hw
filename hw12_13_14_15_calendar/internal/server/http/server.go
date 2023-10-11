@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
 )
 
@@ -17,11 +19,11 @@ type Server struct { // TODO
 	app    Application
 }
 
-func setupRoutes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/ping", pingHandler)
+func setupRoutes() *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/ping", pingHandler).Methods("GET")
 
-	return mux
+	return router
 }
 
 func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server {
