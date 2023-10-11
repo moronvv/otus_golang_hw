@@ -5,33 +5,24 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
+	internalhttproutes "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http/routes"
 )
 
-type Application interface { // TODO
-}
-
-type Server struct { // TODO
+type Server struct {
 	server *http.Server
 	logger *slog.Logger
-	app    Application
+	app    *app.App
 }
 
-func setupRoutes() *mux.Router {
-	router := mux.NewRouter()
-	router.HandleFunc("/ping", pingHandler).Methods("GET")
-
-	return router
-}
-
-func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server {
-	handler := newLoggerMiddleware(logger, setupRoutes())
+func NewServer(logger *slog.Logger, app *app.App, cfg *config.Config) *Server {
+	router := internalhttproutes.SetupRoutes(app)
+	router.Use(newLoggerMiddleware(logger).Middleware)
 
 	server := &http.Server{
 		Addr:              cfg.Server.Address,
-		Handler:           handler,
+		Handler:           router,
 		ReadHeaderTimeout: cfg.Server.RequestTimeout,
 	}
 
