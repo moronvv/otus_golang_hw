@@ -10,13 +10,13 @@ import (
 )
 
 type components struct {
-	App       *app.App
+	App       app.App
 	Validator *validator.Validate
 }
 
 type handlerFn func(http.ResponseWriter, *http.Request)
 
-func SetupRoutes(app *app.App) *mux.Router {
+func SetupRoutes(app app.App) *mux.Router {
 	cmps := &components{
 		App:       app,
 		Validator: validator.New(validator.WithRequiredStructEnabled()),

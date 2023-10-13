@@ -13,10 +13,10 @@ import (
 type Server struct {
 	server *http.Server
 	logger *slog.Logger
-	app    *app.App
+	app    app.App
 }
 
-func NewServer(logger *slog.Logger, app *app.App, cfg *config.Config) *Server {
+func NewServer(logger *slog.Logger, app app.App, cfg *config.Config) *Server {
 	router := internalhttproutes.SetupRoutes(app)
 	router.Use(newLoggerMiddleware(logger).Middleware)
 

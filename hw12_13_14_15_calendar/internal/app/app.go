@@ -9,27 +9,35 @@ import (
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
 
-type App struct {
+type App interface {
+	CreateEvent(context.Context, *models.Event) (*models.Event, error)
+	GetEvents(context.Context) ([]models.Event, error)
+	GetEvent(context.Context, int64) (*models.Event, error)
+	UpdateEvent(context.Context, int64, *models.Event) (*models.Event, error)
+	DeleteEvent(context.Context, int64) error
+}
+
+type app struct {
 	logger *slog.Logger
 	stores *storage.Storages
 }
 
-func New(logger *slog.Logger, storage *storage.Storages) *App {
-	return &App{
+func New(logger *slog.Logger, storage *storage.Storages) *app {
+	return &app{
 		logger: logger,
 		stores: storage,
 	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
+func (a *app) CreateEvent(ctx context.Context, event *models.Event) (*models.Event, error) {
 	return a.stores.Events.Create(ctx, event)
 }
 
-func (a *App) GetEvents(ctx context.Context) ([]models.Event, error) {
+func (a *app) GetEvents(ctx context.Context) ([]models.Event, error) {
 	return a.stores.Events.GetMany(ctx)
 }
 
-func (a *App) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
+func (a *app) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
 	event, err := a.stores.Events.GetOne(ctx, id)
 	if err != nil {
 		return nil, err
@@ -41,7 +49,7 @@ func (a *App) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
 	return event, nil
 }
 
-func (a *App) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
+func (a *app) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
 	updated, err := a.stores.Events.Update(ctx, id, event)
 	if err != nil {
 		return nil, err
@@ -53,7 +61,7 @@ func (a *App) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*
 	return updated, err
 }
 
-func (a *App) DeleteEvent(ctx context.Context, id int64) error {
+func (a *app) DeleteEvent(ctx context.Context, id int64) error {
 	ok, err := a.stores.Events.Delete(ctx, id)
 	if err != nil {
 		return err
