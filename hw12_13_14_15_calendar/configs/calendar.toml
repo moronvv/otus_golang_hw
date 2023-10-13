@@ -6,7 +6,7 @@ address = ":8080"
 request_timeout = "1s"
 
 [storage]
-type = "sql"  # in-memory, sql
+type = "in-memory"  # in-memory, sql
 
 [database]
 dsn = "host=localhost user=user password=dbpass dbname=calendar sslmode=disable"
