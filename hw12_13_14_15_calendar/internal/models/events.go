@@ -3,11 +3,22 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
+
+var (
+	ErrInvalidRequest = errors.New("invalid request")
+	requestValidator  *validator.Validate
+)
+
+func init() {
+	requestValidator = validator.New(validator.WithRequiredStructEnabled())
+}
 
 type Event struct {
 	ID           int64          `db:"id"`
@@ -21,7 +32,7 @@ type Event struct {
 
 type EventRequest struct {
 	Title        string `json:"title" validate:"required,min=2,max=30"`
-	Description  string `json:"description" validate:"min=5,max=150"`
+	Description  string `json:"description" validate:"omitempty,min=5,max=150"`
 	Datetime     string `json:"datetime" validate:"required"`
 	Duration     string `json:"duration" validate:"required"`
 	UserID       string `json:"user_id" validate:"required,uuid4"`
@@ -46,6 +57,10 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
+	if err := requestValidator.Struct(req); err != nil {
+		return fmt.Errorf("%w; %w", ErrInvalidRequest, err)
+	}
+
 	e.Title = req.Title
 
 	// description
@@ -54,8 +69,6 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 			String: req.Description,
 			Valid:  true,
 		}
-	} else {
-		e.Description = sql.NullString{}
 	}
 
 	// datetime

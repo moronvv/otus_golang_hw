@@ -38,7 +38,7 @@ func getEvent(cmps *components) handlerFn {
 
 func createEvent(cmps *components) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
-		request, err := getPayload[models.Event](r, cmps.Validator)
+		request, err := getPayload[models.Event](r)
 		if err != nil {
 			setErrorReponse(w, http.StatusBadRequest, err)
 			return
@@ -62,7 +62,7 @@ func updateEvent(cmps *components) handlerFn {
 			return
 		}
 
-		request, err := getPayload[models.Event](r, cmps.Validator)
+		request, err := getPayload[models.Event](r)
 		if err != nil {
 			setErrorReponse(w, http.StatusBadRequest, err)
 			return

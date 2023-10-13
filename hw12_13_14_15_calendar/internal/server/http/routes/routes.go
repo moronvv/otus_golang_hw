@@ -26,9 +26,9 @@ func SetupRoutes(app app.App) *mux.Router {
 
 	// events
 	eventsRouter := router.PathPrefix("/events").Subrouter()
+	eventsRouter.HandleFunc("", createEvent(cmps)).Methods("POST")
 	eventsRouter.HandleFunc("", getEvents(cmps)).Methods("GET")
 	eventsRouter.HandleFunc("/{id:[0-9]+}", getEvent(cmps)).Methods("GET")
-	eventsRouter.HandleFunc("", createEvent(cmps)).Methods("POST")
 	eventsRouter.HandleFunc("/{id:[0-9]+}", updateEvent(cmps)).Methods("PUT")
 	eventsRouter.HandleFunc("/{id:[0-9]+}", deleteEvent(cmps)).Methods("DELETE")
 

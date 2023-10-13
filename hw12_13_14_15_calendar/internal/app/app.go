@@ -22,7 +22,7 @@ type app struct {
 	stores *storage.Storages
 }
 
-func New(logger *slog.Logger, storage *storage.Storages) *app {
+func New(logger *slog.Logger, storage *storage.Storages) App {
 	return &app{
 		logger: logger,
 		stores: storage,
