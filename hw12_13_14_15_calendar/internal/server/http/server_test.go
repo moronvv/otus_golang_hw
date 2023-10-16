@@ -73,6 +73,7 @@ func toJSON[T any](content []byte) (T, error) {
 
 type eventTestData struct {
 	req          map[string]any
+	incorrectReq map[string]any
 	expectedResp map[string]any
 	before       *models.Event
 	after        *models.Event
@@ -90,6 +91,12 @@ func newEventTestData() *eventTestData {
 			"datetime":    dt.Format(time.RFC3339),
 			"duration":    duration.String(),
 			"user_id":     userID.String(),
+		},
+		incorrectReq: map[string]any{
+			"title":       "t",
+			"description": "desc",
+			"datetime":    "incorrect dt",
+			"user_id":     "incorrect uuid",
 		},
 		expectedResp: map[string]any{
 			"id":          float64(1),
@@ -166,11 +173,7 @@ func (s *EventsHandlesSuite) TestCreateEventHandler() {
 	})
 
 	t.Run("400", func(t *testing.T) {
-		resp, err := s.client.send("POST", "/events", map[string]string{
-			"title":    "t",
-			"datetime": "incorrect dt",
-			"user_id":  "incorrect uuid",
-		})
+		resp, err := s.client.send("POST", "/events", s.eventData.incorrectReq)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -296,12 +299,7 @@ func (s *EventsHandlesSuite) TestUpdateEventHandler() {
 	})
 
 	t.Run("400", func(t *testing.T) {
-		resp, err := s.client.send("PUT", "/events/1", map[string]string{
-			"title":       "t",
-			"description": "desc",
-			"datetime":    "incorrect dt",
-			"user_id":     "incorrect uuid",
-		})
+		resp, err := s.client.send("PUT", "/events/1", s.eventData.incorrectReq)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 

@@ -3,12 +3,13 @@ package internalhttproutes
 import (
 	"net/http"
 
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 )
 
-func getEvents(cmps *components) handlerFn {
+func getEvents(app app.App) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
-		events, err := cmps.App.GetEvents(r.Context())
+		events, err := app.GetEvents(r.Context())
 		if err != nil {
 			setErrorReponse(w, http.StatusInternalServerError, err)
 			return
@@ -18,7 +19,7 @@ func getEvents(cmps *components) handlerFn {
 	}
 }
 
-func getEvent(cmps *components) handlerFn {
+func getEvent(app app.App) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := getID(r)
 		if err != nil {
@@ -26,7 +27,7 @@ func getEvent(cmps *components) handlerFn {
 			return
 		}
 
-		event, err := cmps.App.GetEvent(r.Context(), id)
+		event, err := app.GetEvent(r.Context(), id)
 		if err != nil {
 			setErrorReponse(w, getErrorStatus(err), err)
 			return
@@ -36,7 +37,7 @@ func getEvent(cmps *components) handlerFn {
 	}
 }
 
-func createEvent(cmps *components) handlerFn {
+func createEvent(app app.App) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
 		request, err := getPayload[models.Event](r)
 		if err != nil {
@@ -44,7 +45,7 @@ func createEvent(cmps *components) handlerFn {
 			return
 		}
 
-		createdEvent, err := cmps.App.CreateEvent(r.Context(), request)
+		createdEvent, err := app.CreateEvent(r.Context(), request)
 		if err != nil {
 			setErrorReponse(w, getErrorStatus(err), err)
 			return
@@ -54,7 +55,7 @@ func createEvent(cmps *components) handlerFn {
 	}
 }
 
-func updateEvent(cmps *components) handlerFn {
+func updateEvent(app app.App) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := getID(r)
 		if err != nil {
@@ -68,7 +69,7 @@ func updateEvent(cmps *components) handlerFn {
 			return
 		}
 
-		updatedEvent, err := cmps.App.UpdateEvent(r.Context(), id, request)
+		updatedEvent, err := app.UpdateEvent(r.Context(), id, request)
 		if err != nil {
 			setErrorReponse(w, getErrorStatus(err), err)
 			return
@@ -78,7 +79,7 @@ func updateEvent(cmps *components) handlerFn {
 	}
 }
 
-func deleteEvent(cmps *components) handlerFn {
+func deleteEvent(app app.App) handlerFn {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := getID(r)
 		if err != nil {
@@ -86,7 +87,7 @@ func deleteEvent(cmps *components) handlerFn {
 			return
 		}
 
-		if err := cmps.App.DeleteEvent(r.Context(), id); err != nil {
+		if err := app.DeleteEvent(r.Context(), id); err != nil {
 			setErrorReponse(w, getErrorStatus(err), err)
 			return
 		}

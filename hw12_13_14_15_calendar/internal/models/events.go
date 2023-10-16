@@ -30,7 +30,7 @@ type Event struct {
 	NotifyBefore time.Duration  `db:"notify_before"`
 }
 
-type EventRequest struct {
+type eventRequest struct {
 	Title        string `json:"title" validate:"required,min=2,max=30"`
 	Description  string `json:"description" validate:"omitempty,min=5,max=150"`
 	Datetime     string `json:"datetime" validate:"required"`
@@ -39,7 +39,7 @@ type EventRequest struct {
 	NotifyBefore string `json:"notify_before"`
 }
 
-type EventResponse struct {
+type eventResponse struct {
 	ID           int64     `json:"id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description,omitempty"`
@@ -52,7 +52,7 @@ type EventResponse struct {
 func (e *Event) UnmarshalJSON(data []byte) error {
 	var err error
 
-	var req EventRequest
+	var req eventRequest
 	if err := json.Unmarshal(data, &req); err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 		notifyBefore = e.NotifyBefore.String()
 	}
 
-	resp := EventResponse{
+	resp := eventResponse{
 		ID:           e.ID,
 		Title:        e.Title,
 		Description:  description,
