@@ -1,9 +1,12 @@
 [logger]
 level = "DEBUG"
 
-[server]
+[http_server]
 address = ":8080"
 request_timeout = "1s"
+
+[grpc_server]
+address = ":8081"
 
 [storage]
 type = "in-memory"  # in-memory, sql

@@ -3,19 +3,24 @@ package config
 import "time"
 
 type Config struct {
-	Logger   LoggerConf   `mapstructure:"logger"`
-	Server   ServerConf   `mapstructure:"server"`
-	Storage  StorageConf  `mapstructure:"storage"`
-	Database DatabaseConf `mapstructure:"database"`
+	Logger     LoggerConf     `mapstructure:"logger"`
+	HTTPServer HTTPServerConf `mapstructure:"http_server"`
+	GRPCServer GRPCServerConf `mapstructure:"grpc_server"`
+	Storage    StorageConf    `mapstructure:"storage"`
+	Database   DatabaseConf   `mapstructure:"database"`
 }
 
 type LoggerConf struct {
 	Level string `mapstructure:"level"`
 }
 
-type ServerConf struct {
+type HTTPServerConf struct {
 	Address        string        `mapstructure:"address"`
 	RequestTimeout time.Duration `mapstructure:"request_timeout"`
+}
+
+type GRPCServerConf struct {
+	Address string `mapstructure:"address"`
 }
 
 type StorageConf struct {
