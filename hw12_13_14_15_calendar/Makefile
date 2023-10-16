@@ -48,4 +48,9 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
+generate-pb:
+	rm -rf ./internal/pb
+	mkdir -p ./internal/pb
+	protoc --proto_path=api --go_out=internal/pb --go-grpc_out=internal/pb api/eventservice.proto
+
 .PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local
