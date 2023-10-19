@@ -7,8 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/pb"
 )
 
 var (
@@ -124,4 +128,38 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&resp)
+}
+
+func (e *Event) UnmarshalPB(req *pb.EventRequest) error {
+	var err error
+
+	e.ID = 0
+	e.Title = req.Title
+	if req.Description != "" {
+		e.Description = sql.NullString{
+			String: req.Description,
+			Valid:  true,
+		}
+	}
+	e.Datetime = req.Datetime.AsTime()
+	e.Duration = req.Duration.AsDuration()
+	e.UserID, err = uuid.Parse(req.UserId)
+	if err != nil {
+		return err
+	}
+	e.NotifyBefore = req.NotifyBefore.AsDuration()
+
+	return nil
+}
+
+func (e *Event) MarshalPB() *pb.EventResponse {
+	return &pb.EventResponse{
+		Id:           e.ID,
+		Title:        e.Title,
+		Description:  e.Description.String,
+		Datetime:     timestamppb.New(e.Datetime),
+		Duration:     durationpb.New(e.Duration),
+		UserId:       e.UserID.String(),
+		NotifyBefore: durationpb.New(e.NotifyBefore),
+	}
 }

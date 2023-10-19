@@ -15,22 +15,22 @@ import (
 
 type server struct {
 	pb.UnimplementedEventServiceServer
-	srv    *grpc.Server
-	logger *slog.Logger
-	cfg    *config.GRPCServerConf
-	app    app.App
+	grpcSrv *grpc.Server
+	logger  *slog.Logger
+	cfg     *config.GRPCServerConf
+	app     app.App
 }
 
 func NewServer(logger *slog.Logger, app app.App, cfg *config.GRPCServerConf) internalserver.Server {
-	srv := grpc.NewServer()
-	pb.RegisterEventServiceServer(srv, new(server))
-
-	return &server{
-		srv:    srv,
-		logger: logger,
-		cfg:    cfg,
-		app:    app,
+	srv := &server{
+		grpcSrv: grpc.NewServer(),
+		logger:  logger,
+		cfg:     cfg,
+		app:     app,
 	}
+	pb.RegisterEventServiceServer(srv.grpcSrv, srv)
+
+	return srv
 }
 
 func (s *server) GetType() string {
@@ -47,10 +47,10 @@ func (s *server) Start(context.Context) error {
 		return err
 	}
 
-	return s.srv.Serve(lsn)
+	return s.grpcSrv.Serve(lsn)
 }
 
 func (s *server) Stop(context.Context) error {
-	s.srv.GracefulStop()
+	s.grpcSrv.GracefulStop()
 	return nil
 }
