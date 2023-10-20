@@ -18,14 +18,14 @@ func getErrorStatus(err error) error {
 	case errors.Is(err, app.ErrDocumentNotFound):
 		return status.Error(codes.NotFound, "document not found")
 	default:
-		return status.Errorf(codes.Internal, "%w", err)
+		return status.Errorf(codes.Internal, "%s", err)
 	}
 }
 
 func (s *server) CreateEvent(ctx context.Context, req *pb.EventRequest) (*pb.EventResponse, error) {
 	eventToCreate := models.Event{}
 	if err := eventToCreate.UnmarshalPB(req); err != nil {
-		return nil, status.Errorf(codes.Internal, "pb unmarshal error; %w", err)
+		return nil, status.Errorf(codes.Internal, "pb unmarshal error; %s", err)
 	}
 
 	createdEvent, err := s.app.CreateEvent(ctx, &eventToCreate)
@@ -64,7 +64,7 @@ func (s *server) GetEvent(ctx context.Context, req *pb.EventId) (*pb.EventRespon
 func (s *server) UpdateEvent(ctx context.Context, req *pb.UpdateEventRequest) (*pb.EventResponse, error) {
 	eventToUpdate := models.Event{}
 	if err := eventToUpdate.UnmarshalPB(req.Event); err != nil {
-		return nil, status.Errorf(codes.Internal, "pb unmarshal error; %w", err)
+		return nil, status.Errorf(codes.Internal, "pb unmarshal error; %s", err)
 	}
 
 	updatedEvent, err := s.app.UpdateEvent(ctx, req.Id, &eventToUpdate)

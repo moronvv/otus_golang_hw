@@ -381,3 +381,8 @@ func (s *EventsHandlesSuite) TestDeleteEventHandler() {
 		s.mockedApp.AssertExpectations(t)
 	})
 }
+
+//
+// func TestEventsHandlesSuite(t *testing.T) {
+// 	suite.Run(t, new(EventsHandlesSuite))
+// }

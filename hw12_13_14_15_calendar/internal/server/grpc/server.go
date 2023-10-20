@@ -21,9 +21,14 @@ type server struct {
 	app     app.App
 }
 
-func NewServer(logger *slog.Logger, app app.App, cfg *config.GRPCServerConf) internalserver.Server {
+func NewServer(
+	logger *slog.Logger,
+	app app.App,
+	cfg *config.GRPCServerConf,
+	baseSrv *grpc.Server,
+) internalserver.Server {
 	srv := &server{
-		grpcSrv: grpc.NewServer(),
+		grpcSrv: baseSrv,
 		logger:  logger,
 		cfg:     cfg,
 		app:     app,

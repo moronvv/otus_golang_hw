@@ -12,13 +12,12 @@ import (
 )
 
 type server struct {
-	srv    *http.Server
-	logger *slog.Logger
-	cfg    *config.HTTPServerConf
-	app    app.App
+	srv *http.Server
+	cfg *config.HTTPServerConf
+	app app.App
 }
 
-func NewServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf) internalserver.Server {
+func NewBaseServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf) *http.Server {
 	router := internalhttproutes.SetupRoutes(app)
 	router.Use(newLoggerMiddleware(logger).Middleware)
 
@@ -28,11 +27,14 @@ func NewServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf) int
 		ReadHeaderTimeout: cfg.RequestTimeout,
 	}
 
+	return srv
+}
+
+func NewServer(app app.App, cfg *config.HTTPServerConf, baseSrv *http.Server) internalserver.Server {
 	return &server{
-		srv:    srv,
-		logger: logger,
-		cfg:    cfg,
-		app:    app,
+		srv: baseSrv,
+		cfg: cfg,
+		app: app,
 	}
 }
 
