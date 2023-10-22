@@ -80,7 +80,7 @@ type eventTestData struct {
 }
 
 func newEventTestData() *eventTestData {
-	dt := time.Now().Round(0)
+	dt := time.Now().UTC()
 	duration, _ := time.ParseDuration("1m")
 	userID := uuid.New()
 
@@ -88,7 +88,7 @@ func newEventTestData() *eventTestData {
 		req: map[string]any{
 			"title":       "test",
 			"description": "description",
-			"datetime":    dt.Format(time.RFC3339),
+			"datetime":    dt.Format(time.RFC3339Nano),
 			"duration":    duration.String(),
 			"user_id":     userID.String(),
 		},
@@ -102,7 +102,7 @@ func newEventTestData() *eventTestData {
 			"id":          float64(1),
 			"title":       "test",
 			"description": "description",
-			"datetime":    dt.Format(time.RFC3339),
+			"datetime":    dt.Format(time.RFC3339Nano),
 			"duration":    duration.String(),
 			"user_id":     userID.String(),
 		},
@@ -130,7 +130,7 @@ func newEventTestData() *eventTestData {
 	}
 }
 
-type EventsHandlesSuite struct {
+type EventHandlersSuite struct {
 	suite.Suite
 	mockedApp *mockedapp.MockApp
 	server    *httptest.Server
@@ -139,7 +139,7 @@ type EventsHandlesSuite struct {
 	eventData *eventTestData
 }
 
-func (s *EventsHandlesSuite) SetupSuite() {
+func (s *EventHandlersSuite) SetupSuite() {
 	s.mockedApp = mockedapp.NewMockApp(s.T())
 	router := internalhttproutes.SetupRoutes(s.mockedApp)
 	s.server = httptest.NewServer(router)
@@ -148,11 +148,11 @@ func (s *EventsHandlesSuite) SetupSuite() {
 	s.eventData = newEventTestData()
 }
 
-func (s *EventsHandlesSuite) TearDownSuite() {
+func (s *EventHandlersSuite) TearDownSuite() {
 	s.server.Close()
 }
 
-func (s *EventsHandlesSuite) TestCreateEventHandler() {
+func (s *EventHandlersSuite) TestCreateEventHandler() {
 	t := s.T()
 
 	t.Run("201", func(t *testing.T) {
@@ -197,7 +197,7 @@ func (s *EventsHandlesSuite) TestCreateEventHandler() {
 	})
 }
 
-func (s *EventsHandlesSuite) TestGetEventsHandler() {
+func (s *EventHandlersSuite) TestGetEventsHandler() {
 	t := s.T()
 
 	t.Run("200", func(t *testing.T) {
@@ -231,7 +231,7 @@ func (s *EventsHandlesSuite) TestGetEventsHandler() {
 	})
 }
 
-func (s *EventsHandlesSuite) TestGetEventHandler() {
+func (s *EventHandlersSuite) TestGetEventHandler() {
 	t := s.T()
 
 	t.Run("200", func(t *testing.T) {
@@ -278,7 +278,7 @@ func (s *EventsHandlesSuite) TestGetEventHandler() {
 	})
 }
 
-func (s *EventsHandlesSuite) TestUpdateEventHandler() {
+func (s *EventHandlersSuite) TestUpdateEventHandler() {
 	t := s.T()
 
 	t.Run("200", func(t *testing.T) {
@@ -339,7 +339,7 @@ func (s *EventsHandlesSuite) TestUpdateEventHandler() {
 	})
 }
 
-func (s *EventsHandlesSuite) TestDeleteEventHandler() {
+func (s *EventHandlersSuite) TestDeleteEventHandler() {
 	t := s.T()
 
 	t.Run("200", func(t *testing.T) {
@@ -382,7 +382,6 @@ func (s *EventsHandlesSuite) TestDeleteEventHandler() {
 	})
 }
 
-//
-// func TestEventsHandlesSuite(t *testing.T) {
-// 	suite.Run(t, new(EventsHandlesSuite))
-// }
+func TestEventHandlersSuite(t *testing.T) {
+	suite.Run(t, new(EventHandlersSuite))
+}

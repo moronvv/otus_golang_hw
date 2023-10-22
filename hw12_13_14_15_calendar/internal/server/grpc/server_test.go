@@ -63,7 +63,7 @@ type eventTestData struct {
 }
 
 func newEventTestData() *eventTestData {
-	dt := time.Now().UTC().Round(0)
+	dt := time.Now().UTC()
 	duration, _ := time.ParseDuration("1m")
 	emptyDuration, _ := time.ParseDuration("0s")
 	userID := uuid.New()

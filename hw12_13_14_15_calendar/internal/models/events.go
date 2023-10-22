@@ -76,7 +76,7 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 	}
 
 	// datetime
-	e.Datetime, err = time.Parse(time.RFC3339, req.Datetime)
+	e.Datetime, err = time.Parse(time.RFC3339Nano, req.Datetime)
 	if err != nil {
 		return fmt.Errorf("datetime parse error; %w", err)
 	}
