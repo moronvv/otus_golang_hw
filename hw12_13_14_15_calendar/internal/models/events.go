@@ -131,6 +131,10 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 }
 
 func (e *Event) UnmarshalPB(req *pb.EventRequest) error {
+	if err := req.Validate(); err != nil {
+		return err
+	}
+
 	var err error
 
 	e.ID = 0

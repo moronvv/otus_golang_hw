@@ -48,9 +48,13 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
-generate-pb:
-	rm -rf ./internal/pb
-	mkdir -p ./internal/pb
-	protoc --proto_path=api --go_out=internal/pb --go-grpc_out=internal/pb api/eventservice.proto
+install-pb-deps:
+	(which protoc-gen-go > /dev/null) || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+	(which protoc-gen-go-grpc > /dev/null) || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+	(which protoc-gen-validate > /dev/null) || go install github.com/envoyproxy/protoc-gen-validate@v1.0.2
+	(which buf > /dev/null) || go install github.com/bufbuild/buf/cmd/buf@1.27.1
 
-.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local
+generate-pb: install-pb-deps
+	cd ./api; buf generate
+
+.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local generate-pb
