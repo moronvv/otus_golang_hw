@@ -3,6 +3,7 @@ package internalgrpc_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"net"
 	"testing"
@@ -14,10 +15,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
@@ -114,7 +118,7 @@ func newEventTestData() *eventTestData {
 	}
 }
 
-type EventsHandlersSuite struct {
+type EventHandlersSuite struct {
 	suite.Suite
 	mockedApp  *mockedapp.MockApp
 	baseSrv    *grpc.Server
@@ -125,7 +129,7 @@ type EventsHandlersSuite struct {
 	eventData *eventTestData
 }
 
-func (s *EventsHandlersSuite) SetupSuite() {
+func (s *EventHandlersSuite) SetupSuite() {
 	var err error
 	t := s.T()
 
@@ -139,18 +143,18 @@ func (s *EventsHandlersSuite) SetupSuite() {
 	s.eventData = newEventTestData()
 }
 
-func (s *EventsHandlersSuite) TearDownSuite() {
+func (s *EventHandlersSuite) TearDownSuite() {
 	s.baseSrv.Stop()
 
 	err := s.clientConn.Close()
 	require.NoError(s.T(), err)
 }
 
-func (s *EventsHandlersSuite) TestCreateEventHandler() {
+func (s *EventHandlersSuite) TestCreateEventHandler() {
 	t := s.T()
 	ctx := context.Background()
 
-	t.Run("0", func(t *testing.T) {
+	t.Run("OK", func(t *testing.T) {
 		s.mockedApp.EXPECT().CreateEvent(mock.Anything, s.eventData.before).Return(s.eventData.after, nil).Once()
 
 		resp, err := s.client.CreateEvent(ctx, s.eventData.req)
@@ -159,8 +163,201 @@ func (s *EventsHandlersSuite) TestCreateEventHandler() {
 
 		s.mockedApp.AssertExpectations(t)
 	})
+
+	t.Run("INVALID_ARGUMENT", func(t *testing.T) {
+		resp, err := s.client.CreateEvent(ctx, s.eventData.incorrectReq)
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.InvalidArgument, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INTERNAL", func(t *testing.T) {
+		s.mockedApp.EXPECT().CreateEvent(mock.Anything, s.eventData.before).Return(nil, fmt.Errorf("test")).Once()
+
+		resp, err := s.client.CreateEvent(ctx, s.eventData.req)
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.Internal, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
 }
 
-func TestEventsHandlersSuite(t *testing.T) {
-	suite.Run(t, new(EventsHandlersSuite))
+func (s *EventHandlersSuite) TestGetEventsHandler() {
+	t := s.T()
+	ctx := context.Background()
+
+	t.Run("OK", func(t *testing.T) {
+		s.mockedApp.EXPECT().GetEvents(mock.Anything).Return([]models.Event{*s.eventData.after}, nil).Once()
+
+		resp, err := s.client.GetEvents(ctx, &emptypb.Empty{})
+		require.NoError(t, err)
+		require.Empty(t, cmp.Diff(&pb.EventResponses{
+			Events: []*pb.EventResponse{s.eventData.expectedResp},
+		}, resp, protocmp.Transform()))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INTERNAL", func(t *testing.T) {
+		s.mockedApp.EXPECT().GetEvents(mock.Anything).Return(nil, fmt.Errorf("test")).Once()
+
+		resp, err := s.client.GetEvents(ctx, &emptypb.Empty{})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.Internal, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+}
+
+func (s *EventHandlersSuite) TestGetEventHandler() {
+	t := s.T()
+	ctx := context.Background()
+
+	t.Run("OK", func(t *testing.T) {
+		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(s.eventData.after, nil).Once()
+
+		resp, err := s.client.GetEvent(ctx, &pb.EventId{Id: 1})
+		require.NoError(t, err)
+		require.Empty(t, cmp.Diff(s.eventData.expectedResp, resp, protocmp.Transform()))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("NOT_FOUND", func(t *testing.T) {
+		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, app.ErrDocumentNotFound).Once()
+
+		resp, err := s.client.GetEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.NotFound, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INTERNAL", func(t *testing.T) {
+		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, fmt.Errorf("test")).Once()
+
+		resp, err := s.client.GetEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.Internal, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+}
+
+func (s *EventHandlersSuite) TestUpdateEventHandler() {
+	t := s.T()
+	ctx := context.Background()
+
+	t.Run("OK", func(t *testing.T) {
+		s.mockedApp.EXPECT().UpdateEvent(mock.Anything, int64(1), s.eventData.before).Return(s.eventData.after, nil).Once()
+
+		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
+			Id:    1,
+			Event: s.eventData.req,
+		})
+		require.NoError(t, err)
+		require.Empty(t, cmp.Diff(s.eventData.expectedResp, resp, protocmp.Transform()))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INVALID_ARGUMENT", func(t *testing.T) {
+		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
+			Id:    1,
+			Event: s.eventData.incorrectReq,
+		})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.InvalidArgument, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("NOT_FOUND", func(t *testing.T) {
+		s.mockedApp.EXPECT().
+			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
+			Return(nil, app.ErrDocumentNotFound).
+			Once()
+
+		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
+			Id:    1,
+			Event: s.eventData.req,
+		})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.NotFound, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INTERNAL", func(t *testing.T) {
+		s.mockedApp.EXPECT().UpdateEvent(mock.Anything, int64(1), s.eventData.before).Return(nil, fmt.Errorf("test")).Once()
+
+		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
+			Id:    1,
+			Event: s.eventData.req,
+		})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.Internal, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+}
+
+func (s *EventHandlersSuite) TestDeleteEventHandler() {
+	t := s.T()
+	ctx := context.Background()
+
+	t.Run("OK", func(t *testing.T) {
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(nil).Once()
+
+		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
+		require.NoError(t, err)
+		require.Empty(t, cmp.Diff(&emptypb.Empty{}, resp, protocmp.Transform()))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("NOT_FOUND", func(t *testing.T) {
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(app.ErrDocumentNotFound).Once()
+
+		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.NotFound, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("INTERNAL", func(t *testing.T) {
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(fmt.Errorf("test")).Once()
+
+		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.Internal, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+}
+
+func TestEventHandlersSuite(t *testing.T) {
+	suite.Run(t, new(EventHandlersSuite))
 }
