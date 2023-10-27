@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	internalserver "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server"
@@ -60,10 +59,8 @@ func run() error {
 	calendar := app.New(logger, stores)
 
 	servers := []internalserver.Server{
-		internalhttp.NewServer(calendar, &cfg.HTTPServer,
-			internalhttp.NewBaseServer(logger, calendar, &cfg.HTTPServer),
-		),
-		internalgrpc.NewServer(logger, calendar, &cfg.GRPCServer, grpc.NewServer()),
+		internalhttp.NewServer(logger, calendar, &cfg.HTTPServer, nil),
+		internalgrpc.NewServer(logger, calendar, &cfg.GRPCServer, nil),
 	}
 
 	notifyCtx, notifyCancel := signal.NotifyContext(ctx,

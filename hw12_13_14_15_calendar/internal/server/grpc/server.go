@@ -27,6 +27,14 @@ func NewServer(
 	cfg *config.GRPCServerConf,
 	baseSrv *grpc.Server,
 ) internalserver.Server {
+	if baseSrv == nil {
+		baseSrv = grpc.NewServer(
+			grpc.ChainUnaryInterceptor(
+				newLoggerInterceptor(logger).UnaryLoggingInterceptor,
+			),
+		)
+	}
+
 	srv := &server{
 		grpcSrv: baseSrv,
 		logger:  logger,
