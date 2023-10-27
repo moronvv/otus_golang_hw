@@ -31,6 +31,7 @@ func NewServer(
 		baseSrv = grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
 				newLoggerInterceptor(logger).UnaryLoggingInterceptor,
+				UnaryAuthInterceptor,
 			),
 		)
 	}
