@@ -78,27 +78,17 @@ func (_c *MockEventStorage_Create_Call) RunAndReturn(run func(context.Context, *
 }
 
 // Delete provides a mock function with given fields: _a0, _a1
-func (_m *MockEventStorage) Delete(_a0 context.Context, _a1 int64) (bool, error) {
+func (_m *MockEventStorage) Delete(_a0 context.Context, _a1 int64) error {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (bool, error)); ok {
-		return rf(_a0, _a1)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) bool); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) error); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // MockEventStorage_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
@@ -120,12 +110,12 @@ func (_c *MockEventStorage_Delete_Call) Run(run func(_a0 context.Context, _a1 in
 	return _c
 }
 
-func (_c *MockEventStorage_Delete_Call) Return(_a0 bool, _a1 error) *MockEventStorage_Delete_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *MockEventStorage_Delete_Call) Return(_a0 error) *MockEventStorage_Delete_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *MockEventStorage_Delete_Call) RunAndReturn(run func(context.Context, int64) (bool, error)) *MockEventStorage_Delete_Call {
+func (_c *MockEventStorage_Delete_Call) RunAndReturn(run func(context.Context, int64) error) *MockEventStorage_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }

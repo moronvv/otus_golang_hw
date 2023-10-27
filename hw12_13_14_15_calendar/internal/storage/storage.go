@@ -16,7 +16,7 @@ type EventStorage interface {
 	GetMany(context.Context) ([]models.Event, error)
 	GetOne(context.Context, int64) (*models.Event, error)
 	Update(context.Context, int64, *models.Event) (*models.Event, error)
-	Delete(context.Context, int64) (bool, error)
+	Delete(context.Context, int64) error
 }
 
 type Storages struct {

@@ -48,6 +48,10 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
+generate-mocks:
+	(which mockery > /dev/null) || go install github.com/vektra/mockery/v2@v2.36.0
+	mockery
+
 install-pb-deps:
 	(which protoc-gen-go > /dev/null) || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
 	(which protoc-gen-go-grpc > /dev/null) || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0

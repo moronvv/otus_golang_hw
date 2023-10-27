@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/memory"
@@ -58,11 +59,10 @@ func TestEventStorage(t *testing.T) {
 	require.Equal(t, updatedTestEvent, event)
 
 	// delete
-	ok, err := eventStore.Delete(ctx, id)
+	err = eventStore.Delete(ctx, id)
 	require.NoError(t, err)
-	require.Equal(t, true, ok)
 	event, err = eventStore.GetOne(ctx, id)
-	require.NoError(t, err)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 	require.Empty(t, event)
 }
 
@@ -74,16 +74,15 @@ func TestEventStorageDocNotFound(t *testing.T) {
 
 	// read
 	event, err := eventStore.GetOne(ctx, id)
-	require.NoError(t, err)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 	require.Nil(t, event)
 
 	// update
 	event, err = eventStore.Update(ctx, id, &models.Event{Title: "updated"})
-	require.NoError(t, err)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 	require.Nil(t, event)
 
 	// delete
-	ok, err := eventStore.Delete(ctx, id)
-	require.NoError(t, err)
-	require.False(t, ok)
+	err = eventStore.Delete(ctx, id)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 }

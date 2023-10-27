@@ -66,10 +66,22 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.AssertExpectations(t)
 	})
 
+	t.Run("get event forbidden", func(t *testing.T) {
+		var id int64 = 1
+
+		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, internalerrors.ErrDocumentOperationForbidden).Once()
+
+		event, err := application.GetEvent(ctx, id)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+		require.Empty(t, event)
+
+		mockEventStorage.AssertExpectations(t)
+	})
+
 	t.Run("get event no doc", func(t *testing.T) {
 		var id int64 = 1
 
-		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
+		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, internalerrors.ErrDocumentNotFound).Once()
 
 		event, err := application.GetEvent(ctx, id)
 		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
@@ -91,11 +103,30 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.AssertExpectations(t)
 	})
 
+	t.Run("update event forbidden", func(t *testing.T) {
+		var id int64 = 1
+		testEvent := getTestEvent()
+
+		mockEventStorage.EXPECT().
+			Update(mock.Anything, id, testEvent).
+			Return(nil, internalerrors.ErrDocumentOperationForbidden).
+			Once()
+
+		event, err := application.UpdateEvent(ctx, id, testEvent)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+		require.Empty(t, event)
+
+		mockEventStorage.AssertExpectations(t)
+	})
+
 	t.Run("update event no doc", func(t *testing.T) {
 		var id int64 = 1
 		testEvent := getTestEvent()
 
-		mockEventStorage.EXPECT().Update(mock.Anything, id, testEvent).Return(nil, nil).Once()
+		mockEventStorage.EXPECT().
+			Update(mock.Anything, id, testEvent).
+			Return(nil, internalerrors.ErrDocumentNotFound).
+			Once()
 
 		event, err := application.UpdateEvent(ctx, id, testEvent)
 		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
@@ -107,7 +138,7 @@ func TestEventOperations(t *testing.T) {
 	t.Run("delete event", func(t *testing.T) {
 		var id int64 = 1
 
-		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(true, nil).Once()
+		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(nil).Once()
 
 		err := application.DeleteEvent(ctx, id)
 		require.NoError(t, err)
@@ -115,10 +146,21 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.AssertExpectations(t)
 	})
 
+	t.Run("delete event forbidden", func(t *testing.T) {
+		var id int64 = 1
+
+		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(internalerrors.ErrDocumentOperationForbidden).Once()
+
+		err := application.DeleteEvent(ctx, id)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+
+		mockEventStorage.AssertExpectations(t)
+	})
+
 	t.Run("delete event no doc", func(t *testing.T) {
 		var id int64 = 1
 
-		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(false, nil).Once()
+		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(internalerrors.ErrDocumentNotFound).Once()
 
 		err := application.DeleteEvent(ctx, id)
 		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)

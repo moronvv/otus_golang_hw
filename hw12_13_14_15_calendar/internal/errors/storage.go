@@ -4,4 +4,7 @@ import (
 	"errors"
 )
 
-var ErrDocumentNotFound = errors.New("document not found")
+var (
+	ErrDocumentNotFound           = errors.New("document not found")
+	ErrDocumentOperationForbidden = errors.New("document operation forbidden")
+)

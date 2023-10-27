@@ -251,6 +251,22 @@ func (s *EventHandlersSuite) TestGetEventHandler() {
 		s.mockedApp.AssertExpectations(t)
 	})
 
+	t.Run("403", func(t *testing.T) {
+		s.mockedApp.EXPECT().
+			GetEvent(mock.Anything, int64(1)).
+			Return(nil, internalerrors.ErrDocumentOperationForbidden).
+			Once()
+
+		resp, err := s.client.send("GET", "/events/1", nil)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		content := getContent(resp.Body)
+		require.Equalf(t, http.StatusForbidden, resp.StatusCode, string(content))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
 	t.Run("404", func(t *testing.T) {
 		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, internalerrors.ErrDocumentNotFound).Once()
 
@@ -309,6 +325,22 @@ func (s *EventHandlersSuite) TestUpdateEventHandler() {
 		s.mockedApp.AssertExpectations(t)
 	})
 
+	t.Run("403", func(t *testing.T) {
+		s.mockedApp.EXPECT().
+			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
+			Return(nil, internalerrors.ErrDocumentOperationForbidden).
+			Once()
+
+		resp, err := s.client.send("PUT", "/events/1", s.eventData.req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		content := getContent(resp.Body)
+		require.Equalf(t, http.StatusForbidden, resp.StatusCode, string(content))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
 	t.Run("404", func(t *testing.T) {
 		s.mockedApp.EXPECT().
 			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
@@ -351,6 +383,19 @@ func (s *EventHandlersSuite) TestDeleteEventHandler() {
 
 		content := getContent(resp.Body)
 		require.Equalf(t, http.StatusNoContent, resp.StatusCode, string(content))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("403", func(t *testing.T) {
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(internalerrors.ErrDocumentOperationForbidden).Once()
+
+		resp, err := s.client.send("DELETE", "/events/1", nil)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		content := getContent(resp.Body)
+		require.Equalf(t, http.StatusForbidden, resp.StatusCode, string(content))
 
 		s.mockedApp.AssertExpectations(t)
 	})

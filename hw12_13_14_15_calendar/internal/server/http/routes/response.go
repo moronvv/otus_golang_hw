@@ -26,6 +26,8 @@ func setErrorReponse(w http.ResponseWriter, code int, err error) {
 
 func getErrorStatus(err error) int {
 	switch {
+	case errors.Is(err, internalerrors.ErrDocumentOperationForbidden):
+		return http.StatusForbidden
 	case errors.Is(err, internalerrors.ErrDocumentNotFound):
 		return http.StatusNotFound
 	default:

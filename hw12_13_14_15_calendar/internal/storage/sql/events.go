@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -57,7 +58,7 @@ func (s *SQLEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, 
   `
 	if err := s.store.db.GetContext(ctx, &event, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, internalerrors.ErrDocumentNotFound
 		}
 
 		return nil, err
@@ -87,27 +88,27 @@ func (s *SQLEventStorage) Update(ctx context.Context, id int64, event *models.Ev
 	if rowsAffected, err := result.RowsAffected(); err != nil {
 		return nil, err
 	} else if rowsAffected == 0 {
-		return nil, nil
+		return nil, internalerrors.ErrDocumentNotFound
 	}
 
 	return event, nil
 }
 
-func (s *SQLEventStorage) Delete(ctx context.Context, id int64) (bool, error) {
+func (s *SQLEventStorage) Delete(ctx context.Context, id int64) error {
 	query := `
     DELETE FROM events
     WHERE id = $1;
   `
 	result, err := s.store.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {
-		return false, err
+		return err
 	} else if rowsAffected == 0 {
-		return false, nil
+		return internalerrors.ErrDocumentNotFound
 	}
 
-	return true, err
+	return err
 }

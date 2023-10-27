@@ -15,10 +15,12 @@ import (
 
 func getErrorStatus(err error) error {
 	switch {
+	case errors.Is(err, internalerrors.ErrDocumentOperationForbidden):
+		return status.Error(codes.PermissionDenied, err.Error())
 	case errors.Is(err, internalerrors.ErrDocumentNotFound):
-		return status.Error(codes.NotFound, "document not found")
+		return status.Error(codes.NotFound, err.Error())
 	default:
-		return status.Errorf(codes.Internal, "%s", err)
+		return status.Error(codes.Internal, err.Error())
 	}
 }
 

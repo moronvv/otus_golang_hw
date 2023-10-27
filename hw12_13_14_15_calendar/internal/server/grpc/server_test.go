@@ -231,6 +231,21 @@ func (s *EventHandlersSuite) TestGetEventHandler() {
 		s.mockedApp.AssertExpectations(t)
 	})
 
+	t.Run("PERMISSION_DENIED", func(t *testing.T) {
+		s.mockedApp.EXPECT().
+			GetEvent(mock.Anything, int64(1)).
+			Return(nil, internalerrors.ErrDocumentOperationForbidden).
+			Once()
+
+		resp, err := s.client.GetEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.PermissionDenied, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
 	t.Run("NOT_FOUND", func(t *testing.T) {
 		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, internalerrors.ErrDocumentNotFound).Once()
 
@@ -286,6 +301,24 @@ func (s *EventHandlersSuite) TestUpdateEventHandler() {
 		s.mockedApp.AssertExpectations(t)
 	})
 
+	t.Run("PERMISSION_DENIED", func(t *testing.T) {
+		s.mockedApp.EXPECT().
+			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
+			Return(nil, internalerrors.ErrDocumentOperationForbidden).
+			Once()
+
+		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
+			Id:    1,
+			Event: s.eventData.req,
+		})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.PermissionDenied, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
 	t.Run("NOT_FOUND", func(t *testing.T) {
 		s.mockedApp.EXPECT().
 			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
@@ -330,6 +363,18 @@ func (s *EventHandlersSuite) TestDeleteEventHandler() {
 		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
 		require.NoError(t, err)
 		require.Empty(t, cmp.Diff(&emptypb.Empty{}, resp, protocmp.Transform()))
+
+		s.mockedApp.AssertExpectations(t)
+	})
+
+	t.Run("PERMISSION_DENIED", func(t *testing.T) {
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(internalerrors.ErrDocumentOperationForbidden).Once()
+
+		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
+		grpcErr, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equalf(t, codes.PermissionDenied, grpcErr.Code(), grpcErr.Message())
+		require.Nil(t, resp)
 
 		s.mockedApp.AssertExpectations(t)
 	})

@@ -30,7 +30,12 @@ func NewBaseServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf)
 	return srv
 }
 
-func NewServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf, baseSrv *http.Server) internalserver.Server {
+func NewServer(
+	logger *slog.Logger,
+	app app.App,
+	cfg *config.HTTPServerConf,
+	baseSrv *http.Server,
+) internalserver.Server {
 	if baseSrv == nil {
 		baseSrv = NewBaseServer(logger, app, cfg)
 	}

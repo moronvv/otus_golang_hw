@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -49,7 +50,7 @@ func (s *InMemoryEventStorage) GetOne(_ context.Context, id int64) (*models.Even
 
 	event, ok := s.store.events[id]
 	if !ok {
-		return nil, nil
+		return nil, internalerrors.ErrDocumentNotFound
 	}
 
 	return &event, nil
@@ -60,7 +61,7 @@ func (s *InMemoryEventStorage) Update(_ context.Context, id int64, event *models
 	defer s.mu.Unlock()
 
 	if _, ok := s.store.events[id]; !ok {
-		return nil, nil
+		return nil, internalerrors.ErrDocumentNotFound
 	}
 
 	event.ID = id
@@ -69,14 +70,15 @@ func (s *InMemoryEventStorage) Update(_ context.Context, id int64, event *models
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) (bool, error) {
+func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	_, ok := s.store.events[id]
-	if ok {
-		delete(s.store.events, id)
+	if !ok {
+		return internalerrors.ErrDocumentNotFound
 	}
 
-	return ok, nil
+	delete(s.store.events, id)
+	return nil
 }

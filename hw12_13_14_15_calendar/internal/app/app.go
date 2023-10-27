@@ -2,10 +2,8 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
-	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -39,37 +37,13 @@ func (a *app) GetEvents(ctx context.Context) ([]models.Event, error) {
 }
 
 func (a *app) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
-	event, err := a.stores.Events.GetOne(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if event == nil {
-		return nil, fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
-	}
-
-	return event, nil
+	return a.stores.Events.GetOne(ctx, id)
 }
 
 func (a *app) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*models.Event, error) {
-	updated, err := a.stores.Events.Update(ctx, id, event)
-	if err != nil {
-		return nil, err
-	}
-	if updated == nil {
-		return nil, fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
-	}
-
-	return updated, err
+	return a.stores.Events.Update(ctx, id, event)
 }
 
 func (a *app) DeleteEvent(ctx context.Context, id int64) error {
-	ok, err := a.stores.Events.Delete(ctx, id)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
-	}
-
-	return nil
+	return a.stores.Events.Delete(ctx, id)
 }
