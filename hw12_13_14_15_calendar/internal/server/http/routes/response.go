@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 )
 
 func setEmptyResponse(w http.ResponseWriter, code int) {
@@ -26,7 +26,7 @@ func setErrorReponse(w http.ResponseWriter, code int, err error) {
 
 func getErrorStatus(err error) int {
 	switch {
-	case errors.Is(err, app.ErrDocumentNotFound):
+	case errors.Is(err, internalerrors.ErrDocumentNotFound):
 		return http.StatusNotFound
 	default:
 		return http.StatusInternalServerError

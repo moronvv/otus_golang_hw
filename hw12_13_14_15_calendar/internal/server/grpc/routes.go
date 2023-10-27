@@ -8,14 +8,14 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/pb"
 )
 
 func getErrorStatus(err error) error {
 	switch {
-	case errors.Is(err, app.ErrDocumentNotFound):
+	case errors.Is(err, internalerrors.ErrDocumentNotFound):
 		return status.Error(codes.NotFound, "document not found")
 	default:
 		return status.Errorf(codes.Internal, "%s", err)

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 	mockedstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/mocked"
@@ -71,7 +72,7 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.EXPECT().GetOne(mock.Anything, id).Return(nil, nil).Once()
 
 		event, err := application.GetEvent(ctx, id)
-		require.ErrorIs(t, err, app.ErrDocumentNotFound)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 		require.Empty(t, event)
 
 		mockEventStorage.AssertExpectations(t)
@@ -97,7 +98,7 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.EXPECT().Update(mock.Anything, id, testEvent).Return(nil, nil).Once()
 
 		event, err := application.UpdateEvent(ctx, id, testEvent)
-		require.ErrorIs(t, err, app.ErrDocumentNotFound)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 		require.Empty(t, event)
 
 		mockEventStorage.AssertExpectations(t)
@@ -120,7 +121,7 @@ func TestEventOperations(t *testing.T) {
 		mockEventStorage.EXPECT().Delete(mock.Anything, id).Return(false, nil).Once()
 
 		err := application.DeleteEvent(ctx, id)
-		require.ErrorIs(t, err, app.ErrDocumentNotFound)
+		require.ErrorIs(t, err, internalerrors.ErrDocumentNotFound)
 
 		mockEventStorage.AssertExpectations(t)
 	})

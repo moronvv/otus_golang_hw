@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -43,7 +44,7 @@ func (a *app) GetEvent(ctx context.Context, id int64) (*models.Event, error) {
 		return nil, err
 	}
 	if event == nil {
-		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+		return nil, fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
 	}
 
 	return event, nil
@@ -55,7 +56,7 @@ func (a *app) UpdateEvent(ctx context.Context, id int64, event *models.Event) (*
 		return nil, err
 	}
 	if updated == nil {
-		return nil, fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+		return nil, fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
 	}
 
 	return updated, err
@@ -67,7 +68,7 @@ func (a *app) DeleteEvent(ctx context.Context, id int64) error {
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("%w; id=%d", ErrDocumentNotFound, id)
+		return fmt.Errorf("%w; id=%d", internalerrors.ErrDocumentNotFound, id)
 	}
 
 	return nil

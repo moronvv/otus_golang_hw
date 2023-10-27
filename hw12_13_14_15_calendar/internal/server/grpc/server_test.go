@@ -26,6 +26,7 @@ import (
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	mockedapp "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app/mocked"
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/pb"
 	internalgrpc "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/grpc"
@@ -231,7 +232,7 @@ func (s *EventHandlersSuite) TestGetEventHandler() {
 	})
 
 	t.Run("NOT_FOUND", func(t *testing.T) {
-		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, app.ErrDocumentNotFound).Once()
+		s.mockedApp.EXPECT().GetEvent(mock.Anything, int64(1)).Return(nil, internalerrors.ErrDocumentNotFound).Once()
 
 		resp, err := s.client.GetEvent(ctx, &pb.EventId{Id: 1})
 		grpcErr, ok := status.FromError(err)
@@ -288,7 +289,7 @@ func (s *EventHandlersSuite) TestUpdateEventHandler() {
 	t.Run("NOT_FOUND", func(t *testing.T) {
 		s.mockedApp.EXPECT().
 			UpdateEvent(mock.Anything, int64(1), s.eventData.before).
-			Return(nil, app.ErrDocumentNotFound).
+			Return(nil, internalerrors.ErrDocumentNotFound).
 			Once()
 
 		resp, err := s.client.UpdateEvent(ctx, &pb.UpdateEventRequest{
@@ -334,7 +335,7 @@ func (s *EventHandlersSuite) TestDeleteEventHandler() {
 	})
 
 	t.Run("NOT_FOUND", func(t *testing.T) {
-		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(app.ErrDocumentNotFound).Once()
+		s.mockedApp.EXPECT().DeleteEvent(mock.Anything, int64(1)).Return(internalerrors.ErrDocumentNotFound).Once()
 
 		resp, err := s.client.DeleteEvent(ctx, &pb.EventId{Id: 1})
 		grpcErr, ok := status.FromError(err)

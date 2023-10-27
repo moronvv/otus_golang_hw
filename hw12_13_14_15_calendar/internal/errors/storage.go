@@ -1,5 +1,7 @@
-package app
+package internalerrors
 
-import "errors"
+import (
+	"errors"
+)
 
 var ErrDocumentNotFound = errors.New("document not found")
