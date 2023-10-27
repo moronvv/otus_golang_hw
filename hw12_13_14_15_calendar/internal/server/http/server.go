@@ -20,6 +20,7 @@ type server struct {
 func NewBaseServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf) *http.Server {
 	router := internalhttproutes.SetupRoutes(app)
 	router.Use(newLoggerMiddleware(logger).Middleware)
+	router.Use(AuthMiddleware)
 
 	srv := &http.Server{
 		Addr:              cfg.Address,

@@ -4,6 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
+
+	internalcontext "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/context"
 )
 
 type httpStatusRecorder struct {
@@ -48,4 +52,16 @@ func newLoggerMiddleware(logger *slog.Logger) *loggerMiddleware {
 	return &loggerMiddleware{
 		logger: logger,
 	}
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := uuid.Parse(r.Header.Get("User-ID"))
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(internalcontext.SetUserID(r.Context(), userID)))
+	})
 }
