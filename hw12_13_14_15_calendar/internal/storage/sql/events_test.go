@@ -12,10 +12,24 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
+	internalcontext "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/context"
 	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	sqlstorage "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
+
+func getTestEvent() *models.Event {
+	return &models.Event{
+		Title: "test",
+		Description: sql.NullString{
+			String: "description",
+			Valid:  true,
+		},
+		Datetime: time.Now().UTC(),
+		Duration: 1 * time.Minute,
+		UserID:   uuid.New(),
+	}
+}
 
 type SQLStorageSuite struct {
 	suite.Suite
@@ -55,19 +69,17 @@ func (s *SQLStorageSuite) TearDownSuite() {
 
 func (s *SQLStorageSuite) TestEventStorage() {
 	t := s.T()
-	ctx := context.Background()
+	userID := uuid.New()
+	ctx := internalcontext.SetUserID(context.Background(), userID)
 	eventStore := s.eventStore
 
-	testEvent := &models.Event{
-		Title: "test",
-		Description: sql.NullString{
-			String: "description",
-			Valid:  true,
-		},
-		Datetime: time.Now().UTC(),
-		Duration: 1 * time.Minute,
-		UserID:   uuid.New(),
-	}
+	// create foreign event
+	foreignEvent := getTestEvent()
+	_, err := eventStore.Create(ctx, foreignEvent)
+	require.NoError(t, err)
+
+	testEvent := getTestEvent()
+	testEvent.UserID = userID
 
 	// create
 	event, err := eventStore.Create(ctx, testEvent)
@@ -80,6 +92,7 @@ func (s *SQLStorageSuite) TestEventStorage() {
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	require.Equal(t, testEvent, &events[0])
+
 	event, err = eventStore.GetOne(ctx, id)
 	require.NoError(t, err)
 	require.Equal(t, testEvent, event)
@@ -93,7 +106,7 @@ func (s *SQLStorageSuite) TestEventStorage() {
 		},
 		Datetime: time.Now().UTC(),
 		Duration: 2 * time.Minute,
-		UserID:   uuid.New(),
+		UserID:   userID,
 	}
 	event, err = eventStore.Update(ctx, id, updatedTestEvent)
 	require.NoError(t, err)
@@ -107,9 +120,34 @@ func (s *SQLStorageSuite) TestEventStorage() {
 	require.Empty(t, event)
 }
 
-func (s *SQLStorageSuite) TestSqlStorageSuiteDocNotFound() {
+func (s *SQLStorageSuite) TestSqlStorageDocOperationForbidden() {
 	t := s.T()
-	ctx := context.Background()
+	ctx := internalcontext.SetUserID(context.Background(), uuid.New())
+	eventStore := s.eventStore
+
+	testEvent := getTestEvent()
+	event, err := eventStore.Create(ctx, testEvent)
+	require.NoError(t, err)
+	id := event.ID
+
+	// read
+	event, err = eventStore.GetOne(ctx, id)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+	require.Nil(t, event)
+
+	// update
+	event, err = eventStore.Update(ctx, id, &models.Event{Title: "updated"})
+	require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+	require.Nil(t, event)
+
+	// delete
+	err = eventStore.Delete(ctx, id)
+	require.ErrorIs(t, err, internalerrors.ErrDocumentOperationForbidden)
+}
+
+func (s *SQLStorageSuite) TestSqlStorageDocNotFound() {
+	t := s.T()
+	ctx := internalcontext.SetUserID(context.Background(), uuid.New())
 	eventStore := s.eventStore
 	var id int64 = 1337
 
