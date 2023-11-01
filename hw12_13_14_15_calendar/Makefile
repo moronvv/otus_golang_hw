@@ -61,4 +61,4 @@ install-pb-deps:
 generate-pb: install-pb-deps
 	cd ./api; buf generate
 
-.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local generate-pb
+.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local generate-mocks generate-pb
