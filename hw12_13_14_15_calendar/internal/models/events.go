@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -15,10 +14,7 @@ import (
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/pb"
 )
 
-var (
-	ErrInvalidRequest = errors.New("invalid request")
-	requestValidator  *validator.Validate
-)
+var requestValidator *validator.Validate
 
 func init() {
 	requestValidator = validator.New(validator.WithRequiredStructEnabled())
@@ -62,7 +58,7 @@ func (e *Event) UnmarshalJSON(data []byte) error {
 	}
 
 	if err := requestValidator.Struct(req); err != nil {
-		return fmt.Errorf("%w; %w", ErrInvalidRequest, err)
+		return fmt.Errorf("invalid request; %w", err)
 	}
 
 	e.Title = req.Title
