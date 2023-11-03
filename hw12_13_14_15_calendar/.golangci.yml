@@ -16,6 +16,11 @@ linters-settings:
       - standard
       - default
       - prefix(github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar)
+  tagliatelle:
+    case:
+      use-field-name: true
+      rules:
+        json: snake
 
 issues:
   exclude-rules:

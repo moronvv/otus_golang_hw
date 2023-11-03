@@ -37,7 +37,7 @@ install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.54.2
 
 lint: install-lint-deps
-	golangci-lint run ./...
+	golangci-lint run --timeout=2m ./...
 
 up-related-services:
 	docker-compose -f ./local/docker-compose.yaml up -d
@@ -48,4 +48,16 @@ cleanup:
 migrate-local:
 	GOOSE_DRIVER=$(DB_DRIVER) GOOSE_DBSTRING=$(DB_LOCAL_DSN) goose -dir $(DB_MIGRATIONS_DIR) $(direction)  # direction = up | up-by-one | down
 
-.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local
+install-mocks-deps:
+	(which mockery > /dev/null) || go install github.com/vektra/mockery/v2@v2.36.0
+
+install-pb-deps:
+	(which protoc-gen-go > /dev/null) || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+	(which protoc-gen-go-grpc > /dev/null) || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+	(which protoc-gen-validate > /dev/null) || go install github.com/envoyproxy/protoc-gen-validate@v1.0.2
+	(which buf > /dev/null) || go install github.com/bufbuild/buf/cmd/buf@v1.27.1
+
+generate: install-pb-deps install-mocks-deps
+	go generate ./...
+
+.PHONY: build run build-img run-img version test test-local lint up-related-services cleanup migrate-local generate

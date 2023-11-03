@@ -5,45 +5,61 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/config"
+	internalserver "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server"
+	internalhttproutes "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/server/http/routes"
 )
 
-type Application interface { // TODO
+type server struct {
+	srv *http.Server
+	cfg *config.HTTPServerConf
+	app app.App
 }
 
-type Server struct { // TODO
-	server *http.Server
-	logger *slog.Logger
-	app    Application
-}
+func NewBaseServer(logger *slog.Logger, app app.App, cfg *config.HTTPServerConf) *http.Server {
+	router := internalhttproutes.SetupRoutes(app)
+	router.Use(newLoggerMiddleware(logger).Middleware)
+	router.Use(AuthMiddleware)
 
-func setupRoutes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/ping", pingHandler)
-
-	return mux
-}
-
-func NewServer(logger *slog.Logger, app Application, cfg *config.Config) *Server {
-	handler := newLoggerMiddleware(logger, setupRoutes())
-
-	server := &http.Server{
-		Addr:              cfg.Server.Address,
-		Handler:           handler,
-		ReadHeaderTimeout: cfg.Server.RequestTimeout,
+	srv := &http.Server{
+		Addr:              cfg.Address,
+		Handler:           router,
+		ReadHeaderTimeout: cfg.RequestTimeout,
 	}
 
-	return &Server{
-		server: server,
-		logger: logger,
-		app:    app,
+	return srv
+}
+
+func NewServer(
+	logger *slog.Logger,
+	app app.App,
+	cfg *config.HTTPServerConf,
+	baseSrv *http.Server,
+) internalserver.Server {
+	if baseSrv == nil {
+		baseSrv = NewBaseServer(logger, app, cfg)
+	}
+
+	return &server{
+		srv: baseSrv,
+		cfg: cfg,
+		app: app,
 	}
 }
 
-func (s *Server) Start(context.Context) error {
-	return s.server.ListenAndServe()
+func (s *server) GetType() string {
+	return "HTTP"
 }
 
-func (s *Server) Stop(ctx context.Context) error {
-	return s.server.Shutdown(ctx)
+func (s *server) GetAddress() string {
+	return s.cfg.Address
+}
+
+func (s *server) Start(context.Context) error {
+	return s.srv.ListenAndServe()
+}
+
+func (s *server) Stop(ctx context.Context) error {
+	return s.srv.Shutdown(ctx)
 }

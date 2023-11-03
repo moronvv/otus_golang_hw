@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	internalcontext "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/context"
+	internalerrors "github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/errors"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/models"
 	"github.com/moronvv/otus_golang_hw/hw12_13_14_15_calendar/internal/storage"
 )
@@ -31,52 +33,73 @@ func (s *InMemoryEventStorage) Create(_ context.Context, event *models.Event) (*
 	return event, nil
 }
 
-func (s *InMemoryEventStorage) GetMany(_ context.Context) ([]models.Event, error) {
+func (s *InMemoryEventStorage) GetMany(ctx context.Context) ([]models.Event, error) {
+	userID := internalcontext.GetUserID(ctx)
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	events := []models.Event{}
 	for _, event := range s.store.events {
-		events = append(events, event)
+		if event.UserID == userID {
+			events = append(events, event)
+		}
 	}
 
 	return events, nil
 }
 
-func (s *InMemoryEventStorage) GetOne(_ context.Context, id int64) (*models.Event, error) {
+func (s *InMemoryEventStorage) GetOne(ctx context.Context, id int64) (*models.Event, error) {
+	userID := internalcontext.GetUserID(ctx)
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	event, ok := s.store.events[id]
 	if !ok {
-		return nil, nil
+		return nil, internalerrors.ErrDocumentNotFound
+	}
+	if event.UserID != userID {
+		return nil, internalerrors.ErrDocumentOperationForbidden
 	}
 
 	return &event, nil
 }
 
-func (s *InMemoryEventStorage) Update(_ context.Context, id int64, event *models.Event) (*models.Event, error) {
+func (s *InMemoryEventStorage) Update(ctx context.Context, id int64, updEvent *models.Event) (*models.Event, error) {
+	userID := internalcontext.GetUserID(ctx)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, ok := s.store.events[id]; !ok {
-		return nil, nil
+	event, ok := s.store.events[id]
+	if !ok {
+		return nil, internalerrors.ErrDocumentNotFound
+	}
+	if event.UserID != userID {
+		return nil, internalerrors.ErrDocumentOperationForbidden
 	}
 
-	event.ID = id
-	s.store.events[event.ID] = *event
+	updEvent.ID = id
+	s.store.events[updEvent.ID] = *updEvent
 
-	return event, nil
+	return updEvent, nil
 }
 
-func (s *InMemoryEventStorage) Delete(_ context.Context, id int64) (bool, error) {
+func (s *InMemoryEventStorage) Delete(ctx context.Context, id int64) error {
+	userID := internalcontext.GetUserID(ctx)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	_, ok := s.store.events[id]
-	if ok {
-		delete(s.store.events, id)
+	event, ok := s.store.events[id]
+	if !ok {
+		return internalerrors.ErrDocumentNotFound
+	}
+	if event.UserID != userID {
+		return internalerrors.ErrDocumentOperationForbidden
 	}
 
-	return ok, nil
+	delete(s.store.events, id)
+	return nil
 }
